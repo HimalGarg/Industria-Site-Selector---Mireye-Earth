@@ -1,0 +1,2695 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mireye — Agentic Site Council</title>
+  <meta name="description"
+    content="Drop pins, weight five infrastructure specialists, and get a ranked, cited verdict on your candidate sites." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <style>
+    /* ============================================================
+       MIREYE — Agentic Site Council
+       Premium Design System
+       ============================================================ */
+    :root {
+      --void: #06080C;
+      --panel: #0E1117;
+      --panel-2: #141820;
+      --raised: #1A1F2A;
+      --hairline: #1F2533;
+      --hairline-2: #2A3140;
+      --text-hi: #F0F2F5;
+      --text-mid: #A0AAB8;
+      --text-low: #5C6575;
+
+      --signal: #2FE6C2;
+      --signal-dim: rgba(47, 230, 194, 0.12);
+      --signal-line: rgba(47, 230, 194, 0.30);
+      --signal-glow: rgba(47, 230, 194, 0.06);
+
+      --tier-good: #34D399;
+      --tier-mid: #FBBF24;
+      --tier-warn: #FB923C;
+      --tier-risk: #F87171;
+
+      --a-energy: #FDB750;
+      --a-water: #4FA8FF;
+      --a-surface: #58D68D;
+      --a-transport: #B48CFF;
+      --a-risk: #FF7A7A;
+      --a-workforce: #FF8FCF;
+
+      --radius-panel: 14px;
+      --radius-sm: 8px;
+      --font-display: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+      --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', monospace;
+
+      --glass-bg: rgba(14, 17, 23, 0.7);
+      --glass-border: rgba(47, 230, 194, 0.08);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    [hidden] { display: none !important; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      background: var(--void);
+      color: var(--text-mid);
+      font-family: var(--font-body);
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ---- Animated Background ---- */
+    .bg-effects {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .bg-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      animation: orbFloat 20s ease-in-out infinite alternate;
+    }
+
+    .bg-orb-1 {
+      width: 600px; height: 600px;
+      background: rgba(47, 230, 194, 0.06);
+      top: -15%; left: -5%;
+      animation-duration: 25s;
+    }
+
+    .bg-orb-2 {
+      width: 500px; height: 500px;
+      background: rgba(180, 140, 255, 0.05);
+      top: -10%; right: -8%;
+      animation-duration: 30s;
+      animation-delay: -5s;
+    }
+
+    .bg-orb-3 {
+      width: 400px; height: 400px;
+      background: rgba(253, 183, 80, 0.04);
+      bottom: 10%; left: 30%;
+      animation-duration: 22s;
+      animation-delay: -10s;
+    }
+
+    @keyframes orbFloat {
+      0% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(30px, -20px) scale(1.05); }
+      66% { transform: translate(-20px, 30px) scale(0.95); }
+      100% { transform: translate(15px, 15px) scale(1.02); }
+    }
+
+    /* ---- Grid Overlay ---- */
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        linear-gradient(rgba(47, 230, 194, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(47, 230, 194, 0.02) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 30%, transparent 70%);
+      -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 30%, transparent 70%);
+    }
+
+    img { max-width: 100%; display: block; }
+    button { font-family: inherit; }
+
+    :focus-visible {
+      outline: 2px solid var(--signal);
+      outline-offset: 2px;
+      border-radius: 2px;
+    }
+
+    ::selection {
+      background: var(--signal);
+      color: #04120E;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+
+    h1, h2, h3 {
+      font-family: var(--font-display);
+      color: var(--text-hi);
+      margin: 0;
+    }
+
+    .mono { font-family: var(--font-mono); }
+
+    .eyebrow {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 0.68rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--signal);
+      opacity: 0.8;
+    }
+
+    a { color: var(--signal); }
+
+    .app {
+      max-width: 1360px;
+      margin: 0 auto;
+      padding: 0 clamp(16px, 4vw, 40px) 80px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ============ Masthead ============ */
+    .masthead {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 24px 0 20px;
+      border-bottom: 1px solid var(--hairline);
+      flex-wrap: wrap;
+      position: relative;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .brand-mark {
+      width: 44px;
+      height: 44px;
+      flex: none;
+      filter: drop-shadow(0 0 12px rgba(47, 230, 194, 0.25));
+      animation: brandPulse 4s ease-in-out infinite;
+    }
+
+    @keyframes brandPulse {
+      0%, 100% { filter: drop-shadow(0 0 12px rgba(47, 230, 194, 0.25)); }
+      50% { filter: drop-shadow(0 0 20px rgba(47, 230, 194, 0.4)); }
+    }
+
+    .brand-text .eyebrow { margin-bottom: 3px; }
+
+    .brand-text h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, var(--text-hi), var(--signal));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .masthead-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* ============ Buttons ============ */
+    .btn {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 0.84rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--hairline-2);
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      color: var(--text-hi);
+      padding: 10px 18px;
+      cursor: pointer;
+      transition: all .2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(47, 230, 194, 0.05), transparent);
+      opacity: 0;
+      transition: opacity .2s;
+    }
+
+    .btn:hover::before { opacity: 1; }
+    .btn:hover { border-color: var(--signal-line); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.3); }
+    .btn:active { transform: translateY(0); }
+
+    .btn-ghost {
+      background: transparent;
+      border-color: transparent;
+      color: var(--text-mid);
+      backdrop-filter: none;
+    }
+
+    .btn-ghost:hover {
+      color: var(--text-hi);
+      background: rgba(47, 230, 194, 0.05);
+      border-color: var(--signal-line);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #2FE6C2, #22C9A8);
+      color: #04140F;
+      border-color: transparent;
+      box-shadow: 0 0 0 0 var(--signal-dim), 0 2px 8px rgba(47, 230, 194, 0.2);
+      font-weight: 700;
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #4CF0D2, #36DDB8);
+      box-shadow: 0 0 30px var(--signal-dim), 0 4px 16px rgba(47, 230, 194, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .btn-primary:disabled:hover {
+      background: linear-gradient(135deg, #2FE6C2, #22C9A8);
+      transform: none;
+    }
+
+    .btn-sm { padding: 7px 13px; font-size: 0.78rem; }
+
+    /* ============ Stepper ============ */
+    .stepper {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin: 26px 0 38px;
+      overflow-x: auto;
+    }
+
+    .step {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 18px 10px 0;
+      cursor: pointer;
+      background: none;
+      border: none;
+      color: var(--text-low);
+      flex: none;
+      transition: color .2s;
+    }
+
+    .step[disabled] { cursor: not-allowed; }
+
+    .step-num {
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 1.5px solid var(--hairline-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all .3s cubic-bezier(.2,.8,.2,1);
+      color: var(--text-low);
+      position: relative;
+    }
+
+    .step-label {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 0.88rem;
+      transition: color .2s;
+    }
+
+    .step.is-active .step-num {
+      border-color: var(--signal);
+      color: var(--signal);
+      box-shadow: 0 0 16px var(--signal-dim), inset 0 0 8px rgba(47, 230, 194, 0.1);
+      background: rgba(47, 230, 194, 0.05);
+    }
+
+    .step.is-active .step-label { color: var(--text-hi); }
+
+    .step.is-done .step-num {
+      background: var(--signal);
+      border-color: var(--signal);
+      color: var(--void);
+      font-weight: 700;
+    }
+
+    .step.is-done .step-label { color: var(--text-mid); }
+
+    .step-connector {
+      width: 40px;
+      height: 2px;
+      background: linear-gradient(90deg, var(--hairline-2), var(--hairline));
+      flex: none;
+      border-radius: 1px;
+    }
+
+    .step.is-done + .step-connector {
+      background: linear-gradient(90deg, var(--signal), var(--signal-line));
+    }
+
+    /* ============ Stage Layout ============ */
+    .stage {
+      display: block;
+      animation: stageIn .4s ease;
+    }
+
+    @keyframes stageIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: none; }
+    }
+
+    .stage-head { margin-bottom: 22px; }
+
+    .stage-head h2 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .stage-head p {
+      margin: 8px 0 0;
+      color: var(--text-low);
+      font-size: 0.92rem;
+      max-width: 660px;
+      line-height: 1.6;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--hairline);
+      border-radius: var(--radius-panel);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .panel::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--signal-line), transparent);
+      opacity: 0.5;
+    }
+
+    /* ============ Stage 1: Sites ============ */
+    .stage1-grid {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 22px;
+      align-items: start;
+    }
+
+    .map-shell {
+      border: 1px solid var(--hairline);
+      border-radius: var(--radius-panel);
+      background: var(--panel);
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    }
+
+    .map-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--hairline);
+      background: linear-gradient(180deg, var(--panel-2), var(--panel));
+    }
+
+    .region-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+
+    .region-tab {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 0.74rem;
+      letter-spacing: 0.02em;
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-low);
+      padding: 6px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all .2s;
+    }
+
+    .region-tab:hover { color: var(--text-hi); background: rgba(255,255,255,0.03); }
+
+    .region-tab.is-active {
+      background: var(--signal-dim);
+      border-color: var(--signal-line);
+      color: var(--signal);
+      box-shadow: 0 0 12px rgba(47, 230, 194, 0.1);
+    }
+
+    .cursor-readout {
+      font-size: 0.72rem;
+      color: var(--text-low);
+      white-space: nowrap;
+    }
+
+    .map-svg-wrap { position: relative; background: #080A0E; }
+
+    #mapSvg {
+      display: block;
+      width: 100%;
+      height: auto;
+      cursor: crosshair;
+      touch-action: none;
+    }
+
+    .grid-line { stroke: #181E28; stroke-width: 0.5; }
+    .grid-line.is-equator, .grid-line.is-prime { stroke: #232B38; stroke-width: 1; }
+
+    .city-dot { fill: #343D50; }
+    .city-label { font-family: var(--font-mono); font-size: 9px; fill: #4A5568; }
+
+    .map-pin-group { cursor: default; }
+    .map-pin-ring { fill: none; stroke-width: 2; opacity: 0.5; }
+    .map-pin-label { font-family: var(--font-mono); font-size: 10px; font-weight: 700; fill: #0A0C10; }
+
+    .google-map-div { width: 100%; height: 440px; }
+
+    .place-search-input {
+      flex: 1;
+      min-width: 160px;
+      background: var(--panel);
+      border: 1px solid var(--hairline-2);
+      border-radius: var(--radius-sm);
+      color: var(--text-hi);
+      padding: 8px 14px;
+      font-family: var(--font-body);
+      font-size: 0.86rem;
+      transition: border-color .2s, box-shadow .2s;
+    }
+
+    .place-search-input:focus {
+      border-color: var(--signal);
+      box-shadow: 0 0 16px rgba(47, 230, 194, 0.1);
+    }
+
+    .map-provider-tag {
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      color: var(--text-low);
+      white-space: nowrap;
+      border: 1px solid var(--hairline-2);
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.02);
+    }
+
+    .map-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding: 10px 16px;
+      font-size: 0.76rem;
+      color: var(--text-low);
+      border-top: 1px solid var(--hairline);
+      background: linear-gradient(0deg, var(--panel-2), transparent);
+    }
+
+    .map-footer-right { display: flex; align-items: center; gap: 14px; }
+
+    .pin-count {
+      font-family: var(--font-mono);
+      color: var(--text-mid);
+    }
+
+    .hidden-pins-note { color: var(--tier-mid); }
+
+    .manual-entry {
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+      padding: 16px;
+      border: 1px dashed var(--hairline-2);
+      border-radius: var(--radius-panel);
+      background: rgba(47, 230, 194, 0.02);
+      transition: border-color .2s;
+    }
+
+    .manual-entry:hover { border-color: var(--signal-line); }
+
+    .manual-entry .field { margin-bottom: 0; flex: 1; min-width: 120px; }
+
+    .manual-entry-label {
+      width: 100%;
+      font-family: var(--font-display);
+      font-size: 0.74rem;
+      color: var(--text-low);
+      margin-bottom: 4px;
+    }
+
+    .dossier-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: 540px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .dossier-list::-webkit-scrollbar { width: 4px; }
+    .dossier-list::-webkit-scrollbar-track { background: transparent; }
+    .dossier-list::-webkit-scrollbar-thumb { background: var(--hairline-2); border-radius: 2px; }
+
+    .dossier-empty {
+      padding: 48px 20px;
+      text-align: center;
+      color: var(--text-low);
+      font-size: 0.88rem;
+      border: 1px dashed var(--hairline-2);
+      border-radius: var(--radius-panel);
+      background: rgba(47, 230, 194, 0.02);
+    }
+
+    .dossier-empty svg {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      margin-bottom: 12px;
+      opacity: 0.3;
+    }
+
+    .dossier-card {
+      padding: 18px;
+      border-radius: var(--radius-panel);
+      position: relative;
+      border: 1px solid var(--hairline);
+      background: var(--panel-2);
+      border-left: 3px solid var(--site-color, var(--signal));
+      transition: transform .15s, box-shadow .15s, border-color .15s;
+    }
+
+    .dossier-card:hover {
+      transform: translateX(2px);
+      box-shadow: -4px 0 20px rgba(47, 230, 194, 0.06);
+      border-color: var(--signal-line);
+    }
+
+    .dossier-card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .dossier-tag {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--void);
+      background: var(--site-color, var(--signal));
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+
+    .icon-btn {
+      background: none;
+      border: 1px solid transparent;
+      color: var(--text-low);
+      cursor: pointer;
+      padding: 5px 7px;
+      line-height: 0;
+      border-radius: 6px;
+      transition: all .15s;
+    }
+
+    .icon-btn:hover {
+      color: var(--tier-risk);
+      background: rgba(248, 113, 113, 0.1);
+      border-color: rgba(248, 113, 113, 0.2);
+    }
+
+    .field { margin-bottom: 10px; }
+    .field:last-child { margin-bottom: 0; }
+
+    .field label {
+      display: block;
+      font-size: 0.72rem;
+      color: var(--text-low);
+      margin-bottom: 4px;
+      font-family: var(--font-display);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .field input, .field textarea {
+      width: 100%;
+      background: var(--panel);
+      border: 1px solid var(--hairline-2);
+      border-radius: var(--radius-sm);
+      color: var(--text-hi);
+      padding: 9px 12px;
+      font-family: var(--font-body);
+      font-size: 0.88rem;
+      transition: border-color .2s, box-shadow .2s;
+    }
+
+    .field input.mono-field { font-family: var(--font-mono); color: var(--text-low); }
+
+    .field input:focus, .field textarea:focus {
+      border-color: var(--signal);
+      box-shadow: 0 0 12px rgba(47, 230, 194, 0.08);
+      outline: none;
+    }
+
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+    .latlng-row {
+      display: flex;
+      gap: 16px;
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      color: var(--text-low);
+      margin-top: 4px;
+      padding: 4px 0;
+    }
+
+    .cpa-hint {
+      font-size: 0.74rem;
+      color: var(--signal);
+      margin-top: 6px;
+      font-family: var(--font-mono);
+      opacity: 0.8;
+    }
+
+    .stage-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 26px;
+    }
+
+    .stage-note { font-size: 0.8rem; color: var(--text-low); }
+
+    /* ============ Stage 2: Console ============ */
+    .console-panel { padding: 30px clamp(16px, 3vw, 36px); }
+
+    .console-strip {
+      display: flex;
+      gap: clamp(12px, 2vw, 28px);
+      overflow-x: auto;
+      padding: 8px 4px 20px;
+      justify-content: center;
+    }
+
+    .channel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      width: 86px;
+      flex: none;
+    }
+
+    .channel-glyph {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--raised);
+      border: 1px solid var(--hairline-2);
+      color: var(--agent-color);
+      transition: all .2s;
+      position: relative;
+    }
+
+    .channel-glyph::after {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 14px;
+      border: 1px solid var(--agent-color);
+      opacity: 0;
+      transition: opacity .2s;
+    }
+
+    .channel:hover .channel-glyph::after { opacity: 0.2; }
+
+    .channel-glyph svg { width: 18px; height: 18px; }
+
+    .fader-track { width: 44px; height: 180px; position: relative; }
+
+    .fader-input {
+      -webkit-appearance: none;
+      appearance: none;
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 150px;
+      height: 6px;
+      margin: 0;
+      background: transparent;
+      cursor: pointer;
+      transform: translate(-50%, -50%) rotate(-90deg);
+    }
+
+    .fader-input::-webkit-slider-runnable-track {
+      height: 6px;
+      border-radius: 3px;
+      background: linear-gradient(to right, var(--agent-color) var(--val, 50%), #1A1F2A var(--val, 50%));
+      box-shadow: inset 0 0 4px rgba(0,0,0,0.3);
+    }
+
+    .fader-input::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      margin-top: -8px;
+      background: radial-gradient(circle at 40% 35%, #1A1F2A, #0A0C10);
+      border: 3px solid var(--agent-color);
+      box-shadow: 0 0 14px var(--agent-color);
+      cursor: grab;
+      transition: box-shadow .15s;
+    }
+
+    .fader-input::-webkit-slider-thumb:hover {
+      box-shadow: 0 0 20px var(--agent-color);
+    }
+
+    .fader-input::-moz-range-track {
+      height: 6px;
+      border-radius: 3px;
+      background: #1A1F2A;
+    }
+
+    .fader-input::-moz-range-progress {
+      height: 6px;
+      border-radius: 3px;
+      background: var(--agent-color);
+    }
+
+    .fader-input::-moz-range-thumb {
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: #0A0C10;
+      border: 3px solid var(--agent-color);
+      box-shadow: 0 0 14px var(--agent-color);
+      cursor: grab;
+    }
+
+    .channel-readout {
+      font-family: var(--font-mono);
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--agent-color);
+      background: var(--raised);
+      border: 1px solid var(--hairline-2);
+      border-radius: 6px;
+      padding: 3px 10px;
+      min-width: 44px;
+      text-align: center;
+      text-shadow: 0 0 12px var(--agent-color);
+    }
+
+    .channel-label {
+      font-family: var(--font-display);
+      font-size: 0.7rem;
+      text-align: center;
+      color: var(--text-mid);
+      line-height: 1.3;
+      font-weight: 500;
+    }
+
+    .channel.is-workforce { animation: channelIn .4s cubic-bezier(.2,.8,.2,1); }
+
+    @keyframes channelIn {
+      from { opacity: 0; transform: translateY(10px) scale(0.9); }
+      to { opacity: 1; transform: none; }
+    }
+
+    .console-footnote {
+      font-size: 0.78rem;
+      color: var(--text-low);
+      border-top: 1px solid var(--hairline);
+      padding-top: 16px;
+    }
+
+    .workforce-toggle-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      margin: 24px 0 4px;
+      padding-top: 24px;
+      border-top: 1px solid var(--hairline);
+    }
+
+    .switch {
+      position: relative;
+      width: 44px;
+      height: 26px;
+      flex: none;
+      margin-top: 2px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+      position: absolute;
+    }
+
+    .switch-track {
+      position: absolute;
+      inset: 0;
+      background: var(--raised);
+      border: 1px solid var(--hairline-2);
+      border-radius: 20px;
+      transition: all .2s;
+      cursor: pointer;
+    }
+
+    .switch-track::after {
+      content: '';
+      position: absolute;
+      top: 3px; left: 3px;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: var(--text-low);
+      transition: all .2s cubic-bezier(.2,.8,.2,1);
+    }
+
+    .switch input:checked+.switch-track {
+      background: var(--signal-dim);
+      border-color: var(--signal);
+      box-shadow: 0 0 12px rgba(47, 230, 194, 0.15);
+    }
+
+    .switch input:checked+.switch-track::after {
+      transform: translateX(18px);
+      background: var(--signal);
+      box-shadow: 0 0 8px var(--signal);
+    }
+
+    .workforce-copy label {
+      font-family: var(--font-display);
+      font-weight: 600;
+      color: var(--text-hi);
+      font-size: 0.92rem;
+      cursor: pointer;
+      display: block;
+    }
+
+    .workforce-copy p {
+      margin: 4px 0 0;
+      font-size: 0.8rem;
+      color: var(--text-low);
+      max-width: 540px;
+      line-height: 1.5;
+    }
+
+    .workforce-textarea { margin-top: 14px; max-width: 640px; }
+    .workforce-textarea textarea { min-height: 88px; resize: vertical; }
+
+    .payload-toggle {
+      margin-top: 26px;
+      border-top: 1px solid var(--hairline);
+      padding-top: 18px;
+    }
+
+    .payload-toggle summary {
+      cursor: pointer;
+      font-family: var(--font-display);
+      font-size: 0.82rem;
+      color: var(--text-mid);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      list-style: none;
+      transition: color .15s;
+    }
+
+    .payload-toggle summary:hover { color: var(--signal); }
+    .payload-toggle summary::-webkit-details-marker { display: none; }
+
+    .payload-toggle summary::before {
+      content: '▸';
+      color: var(--signal);
+      transition: transform .2s;
+      font-size: 0.9rem;
+    }
+
+    .payload-toggle[open] summary::before { transform: rotate(90deg); }
+
+    .payload-pre {
+      margin-top: 14px;
+      background: #050709;
+      border: 1px solid var(--hairline);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      color: #8FE3D0;
+      max-height: 280px;
+      overflow: auto;
+      position: relative;
+      line-height: 1.6;
+    }
+
+    .payload-copy { position: absolute; top: 10px; right: 10px; }
+
+    /* ============ Stage 3: Dashboard ============ */
+    .demo-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      color: var(--tier-mid);
+      background: rgba(251, 191, 36, 0.08);
+      border: 1px solid rgba(251, 191, 36, 0.2);
+      padding: 4px 10px;
+      border-radius: 20px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .summary-card {
+      padding: clamp(22px, 3vw, 36px);
+      margin-bottom: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .summary-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(ellipse 600px 350px at 90% -20%, rgba(47, 230, 194, 0.08), transparent 60%);
+    }
+
+    .summary-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      position: relative;
+      z-index: 1;
+    }
+
+    .summary-text {
+      font-size: 1.05rem;
+      line-height: 1.8;
+      color: var(--text-hi);
+      max-width: 800px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .cite {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--signal);
+      cursor: pointer;
+      vertical-align: super;
+      padding: 0 2px;
+      text-decoration: none;
+      border-bottom: 1px dotted var(--signal-line);
+      transition: color .15s;
+    }
+
+    .cite:hover { color: #4CF0D2; }
+
+    .footnotes {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid var(--hairline);
+      font-size: 0.76rem;
+      color: var(--text-low);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .footnotes a { color: var(--text-mid); transition: color .15s; }
+    .footnotes a:hover { color: var(--signal); }
+
+    .scoreboard-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--hairline);
+      border-radius: var(--radius-panel);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    }
+
+    table.scoreboard {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 720px;
+    }
+
+    table.scoreboard thead th {
+      text-align: left;
+      font-family: var(--font-display);
+      font-size: 0.66rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-low);
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--hairline);
+      background: linear-gradient(180deg, var(--panel-2), var(--panel));
+    }
+
+    table.scoreboard tbody tr {
+      cursor: pointer;
+      transition: all .15s;
+      border-bottom: 1px solid var(--hairline);
+    }
+
+    table.scoreboard tbody tr:last-child { border-bottom: none; }
+
+    table.scoreboard tbody tr:hover {
+      background: rgba(47, 230, 194, 0.03);
+    }
+
+    table.scoreboard td { padding: 16px 18px; vertical-align: middle; }
+
+    .rank-cell {
+      font-family: var(--font-mono);
+      font-size: 1.05rem;
+      color: var(--text-low);
+      width: 40px;
+    }
+
+    .rank-cell.is-first {
+      color: var(--signal);
+      font-weight: 700;
+      text-shadow: 0 0 12px rgba(47, 230, 194, 0.3);
+    }
+
+    .site-cell { display: flex; align-items: center; gap: 12px; }
+
+    .site-swatch {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--c, var(--signal));
+      box-shadow: 0 0 10px var(--c, var(--signal));
+      flex: none;
+    }
+
+    .site-name {
+      color: var(--text-hi);
+      font-weight: 600;
+      font-family: var(--font-display);
+      font-size: 0.94rem;
+    }
+
+    .site-sub {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--text-low);
+      margin-top: 2px;
+    }
+
+    .score-cell {
+      font-family: var(--font-mono);
+      font-size: 1.2rem;
+      color: var(--text-hi);
+      font-weight: 700;
+    }
+
+    .score-cell small { font-size: 0.6rem; color: var(--text-low); font-weight: 400; }
+
+    .badges-cell { display: flex; flex-direction: column; gap: 5px; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.72rem;
+      padding: 3px 10px;
+      border-radius: 20px;
+      width: fit-content;
+      font-family: var(--font-body);
+      font-weight: 500;
+    }
+
+    .badge.pos { background: rgba(52, 211, 153, 0.1); color: var(--tier-good); border: 1px solid rgba(52, 211, 153, 0.15); }
+    .badge.neg { background: rgba(248, 113, 113, 0.1); color: var(--tier-risk); border: 1px solid rgba(248, 113, 113, 0.15); }
+
+    /* ============ Radar ============ */
+    .radar-svg { display: block; }
+    .radar-grid { fill: none; stroke: var(--hairline-2); stroke-width: 0.8; }
+    .radar-axis { stroke-width: 0.8; opacity: 0.35; }
+
+    .radar-poly {
+      fill: var(--signal);
+      fill-opacity: 0.12;
+      stroke: var(--signal);
+      stroke-width: 1.8;
+      stroke-linejoin: round;
+      filter: drop-shadow(0 0 4px rgba(47, 230, 194, 0.2));
+    }
+
+    .radar-dot { stroke: #0A0C10; stroke-width: 1.5; }
+    .radar-label { font-family: var(--font-mono); font-size: 9px; fill: var(--text-low); }
+
+    /* ============ Drawer ============ */
+    .drawer-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(6, 8, 12, 0.7);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .25s;
+      z-index: 40;
+    }
+
+    .drawer-backdrop.is-open { opacity: 1; pointer-events: auto; }
+
+    .drawer {
+      position: fixed;
+      top: 0; right: 0;
+      height: 100vh;
+      width: min(580px, 100vw);
+      background: linear-gradient(180deg, var(--panel), var(--panel-2));
+      border-left: 1px solid var(--hairline);
+      transform: translateX(100%);
+      transition: transform .3s cubic-bezier(.2, .8, .2, 1);
+      z-index: 41;
+      overflow-y: auto;
+      padding: 28px clamp(18px, 3vw, 32px) 60px;
+      box-shadow: -16px 0 48px rgba(0,0,0,0.3);
+    }
+
+    .drawer::-webkit-scrollbar { width: 4px; }
+    .drawer::-webkit-scrollbar-track { background: transparent; }
+    .drawer::-webkit-scrollbar-thumb { background: var(--hairline-2); border-radius: 2px; }
+
+    .drawer.is-open { transform: translateX(0); }
+
+    .drawer-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .drawer-title h3 { font-size: 1.35rem; }
+
+    .drawer-sub {
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      color: var(--text-low);
+      margin-top: 6px;
+    }
+
+    .drawer-close {
+      background: var(--raised);
+      border: 1px solid var(--hairline-2);
+      color: var(--text-mid);
+      border-radius: 8px;
+      width: 34px;
+      height: 34px;
+      cursor: pointer;
+      flex: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all .15s;
+      font-size: 0.9rem;
+    }
+
+    .drawer-close:hover {
+      color: var(--text-hi);
+      border-color: var(--signal-line);
+      background: rgba(47, 230, 194, 0.05);
+    }
+
+    .drawer-radar-wrap { display: flex; justify-content: center; margin: 20px 0 8px; }
+
+    .drawer-cpa {
+      text-align: center;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--text-low);
+      margin-bottom: 20px;
+      padding: 10px;
+      background: rgba(47, 230, 194, 0.03);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--hairline);
+    }
+
+    .drawer-cpa b { color: var(--signal); }
+
+    .agent-report {
+      border: 1px solid var(--hairline);
+      border-radius: var(--radius-panel);
+      padding: 18px;
+      margin-bottom: 12px;
+      border-left: 3px solid var(--agent-color);
+      background: var(--panel-2);
+      transition: transform .15s, box-shadow .15s;
+    }
+
+    .agent-report:hover {
+      transform: translateX(2px);
+      box-shadow: -4px 0 16px rgba(0,0,0,0.15);
+    }
+
+    .agent-report-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .agent-report-name {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font-display);
+      font-weight: 600;
+      color: var(--text-hi);
+      font-size: 0.94rem;
+    }
+
+    .agent-report-name .channel-glyph { width: 28px; height: 28px; border-radius: 7px; }
+    .agent-report-name .channel-glyph svg { width: 14px; height: 14px; }
+
+    .agent-score {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--agent-color);
+      text-shadow: 0 0 12px var(--agent-color);
+    }
+
+    .agent-verdict {
+      display: inline-block;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 0.7rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin-bottom: 10px;
+    }
+
+    .agent-memo {
+      font-size: 0.86rem;
+      line-height: 1.65;
+      color: var(--text-mid);
+    }
+
+    .agent-gap {
+      margin-top: 12px;
+      font-size: 0.76rem;
+      color: var(--tier-mid);
+      background: rgba(251, 191, 36, 0.06);
+      border: 1px solid rgba(251, 191, 36, 0.2);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      display: flex;
+      gap: 8px;
+      line-height: 1.5;
+    }
+
+    .agent-cites {
+      margin-top: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .agent-cite-chip {
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      color: var(--text-low);
+      border: 1px solid var(--hairline-2);
+      border-radius: 20px;
+      padding: 3px 10px;
+      text-decoration: none;
+      transition: all .15s;
+      background: rgba(255,255,255,0.02);
+    }
+
+    .agent-cite-chip:hover {
+      color: var(--signal);
+      border-color: var(--signal-line);
+      background: rgba(47, 230, 194, 0.05);
+    }
+
+    /* ============ Loading Overlay ============ */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(6, 8, 12, 0.9);
+      z-index: 60;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 20px;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    .loading-rings {
+      position: relative;
+      width: 100px;
+      height: 100px;
+    }
+
+    .loading-rings span {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 2px solid var(--signal);
+      opacity: 0;
+      animation: ringPulse 2s ease-out infinite;
+    }
+
+    .loading-rings span:nth-child(2) { animation-delay: .5s; }
+    .loading-rings span:nth-child(3) { animation-delay: 1s; }
+
+    .loading-rings .ring-core {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: var(--signal);
+      box-shadow: 0 0 20px var(--signal), 0 0 40px rgba(47, 230, 194, 0.3);
+      animation: corePulse 1.5s ease-in-out infinite;
+      border: none;
+      inset: auto;
+      opacity: 1;
+    }
+
+    @keyframes ringPulse {
+      0% { transform: scale(0.25); opacity: 0.9; border-color: var(--signal); }
+      100% { transform: scale(1); opacity: 0; }
+    }
+
+    @keyframes corePulse {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 20px var(--signal), 0 0 40px rgba(47, 230, 194, 0.3); }
+      50% { transform: translate(-50%, -50%) scale(1.3); box-shadow: 0 0 30px var(--signal), 0 0 60px rgba(47, 230, 194, 0.4); }
+    }
+
+    .loading-title {
+      font-family: var(--font-display);
+      font-weight: 700;
+      color: var(--text-hi);
+      font-size: 1.1rem;
+    }
+
+    .loading-sub {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text-low);
+      text-align: center;
+      max-width: 360px;
+      line-height: 1.5;
+    }
+
+    /* ============ Toast ============ */
+    .toast-region {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 70;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .toast {
+      font-family: var(--font-display);
+      font-size: 0.82rem;
+      color: var(--text-hi);
+      background: var(--raised);
+      border: 1px solid var(--hairline-2);
+      border-left: 3px solid var(--signal);
+      padding: 12px 18px;
+      border-radius: 10px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+      animation: toastIn .25s cubic-bezier(.2,.8,.2,1);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateY(10px) scale(0.95); }
+      to { opacity: 1; transform: none; }
+    }
+
+    /* ============ Responsive ============ */
+    @media (max-width:900px) {
+      .stage1-grid { grid-template-columns: 1fr; }
+      #map { height: 360px; }
+      .dossier-list { max-height: none; }
+      .console-strip { justify-content: flex-start; }
+    }
+
+    @media (max-width:640px) {
+      .masthead { flex-direction: column; align-items: flex-start; }
+      .field-row { grid-template-columns: 1fr; }
+      .drawer { width: 100vw; }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Background Effects -->
+  <div class="bg-effects">
+    <div class="bg-orb bg-orb-1"></div>
+    <div class="bg-orb bg-orb-2"></div>
+    <div class="bg-orb bg-orb-3"></div>
+  </div>
+  <div class="bg-grid"></div>
+
+  <div class="app">
+
+    <!-- ===================== MASTHEAD ===================== -->
+    <header class="masthead">
+      <div class="brand">
+        <svg class="brand-mark" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="22" cy="22" r="20" stroke="#1F2533" stroke-width="1" />
+          <circle cx="22" cy="22" r="14" stroke="#2FE6C2" stroke-opacity="0.35" stroke-width="1" stroke-dasharray="3 3" />
+          <g>
+            <circle cx="22" cy="4.5" r="2.8" fill="#FDB750" />
+            <circle cx="37" cy="14" r="2.8" fill="#4FA8FF" />
+            <circle cx="37" cy="30" r="2.8" fill="#58D68D" />
+            <circle cx="22" cy="39.5" r="2.8" fill="#B48CFF" />
+            <circle cx="7" cy="30" r="2.8" fill="#FF7A7A" />
+          </g>
+          <circle cx="22" cy="22" r="4.5" fill="#2FE6C2" />
+          <circle cx="22" cy="22" r="7" stroke="#2FE6C2" stroke-opacity="0.15" stroke-width="0.5" />
+        </svg>
+        <div class="brand-text">
+          <div class="eyebrow">Agentic Site Council</div>
+          <h1>Mireye</h1>
+        </div>
+      </div>
+      <div class="masthead-actions">
+        <button class="btn btn-ghost btn-sm" id="btnExample" type="button">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 4h12M2 8h8M2 12h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Try example sites
+        </button>
+        <button class="btn btn-ghost btn-sm" id="btnReset" type="button">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 2v5h5M14 14v-5H9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.5 6A6 6 0 0 0 3 3.5L2 7M2.5 10a6 6 0 0 0 10.5 2.5L14 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Reset session
+        </button>
+      </div>
+    </header>
+
+    <!-- ===================== STEPPER ===================== -->
+    <nav class="stepper" id="stepper" aria-label="Council workflow">
+      <button class="step is-active" data-goto="1" type="button">
+        <span class="step-num">01</span><span class="step-label">Sites</span>
+      </button>
+      <span class="step-connector"></span>
+      <button class="step" data-goto="2" type="button" disabled>
+        <span class="step-num">02</span><span class="step-label">Council weights</span>
+      </button>
+      <span class="step-connector"></span>
+      <button class="step" data-goto="3" type="button" disabled>
+        <span class="step-num">03</span><span class="step-label">Verdict</span>
+      </button>
+    </nav>
+
+    <main>
+      <!-- ===================== STAGE 1: SITES ===================== -->
+      <section class="stage" id="stage-1" data-stage="1">
+        <div class="stage-head">
+          <h2>Nominate up to five sites</h2>
+          <p>Click the map to drop a pin. Coordinates lock in automatically — add a label, and cost or acreage if you
+            have them, so the council can weigh value for money.</p>
+        </div>
+
+        <div class="stage1-grid">
+          <div>
+            <div class="map-shell">
+              <div class="map-toolbar toolbar-grid">
+                <div class="region-tabs" id="regionTabs">
+                  <button class="region-tab" data-region="world" type="button">World</button>
+                  <button class="region-tab is-active" data-region="na" type="button">North America</button>
+                  <button class="region-tab" data-region="eu" type="button">Europe</button>
+                  <button class="region-tab" data-region="apac" type="button">Asia-Pacific</button>
+                </div>
+                <div class="cursor-readout mono" id="cursorReadout">lat —, lng —</div>
+              </div>
+              <div class="map-toolbar toolbar-google" hidden>
+                <input id="placeSearch" type="text" class="place-search-input" placeholder="Search an address or place…"
+                  autocomplete="off" />
+                <span class="map-provider-tag">Google Maps</span>
+              </div>
+              <div class="map-svg-wrap">
+                <svg id="mapSvg" viewBox="0 0 900 520" xmlns="http://www.w3.org/2000/svg" role="img"
+                  aria-label="Click to drop a site pin"></svg>
+                <div id="googleMapDiv" class="google-map-div" hidden></div>
+              </div>
+              <div class="map-footer">
+                <span id="mapHintText">Click anywhere on the grid to drop a site</span>
+                <span class="map-footer-right">
+                  <button class="btn btn-ghost btn-sm" id="btnToggleProvider" type="button" hidden>Switch map</button>
+                  <span class="pin-count"><span id="pinCount">0</span> / 5 sites</span>
+                </span>
+              </div>
+            </div>
+            <div class="hidden-pins-note mono" id="hiddenPinsNote" style="margin-top:8px;"></div>
+
+            <div class="manual-entry">
+              <span class="manual-entry-label">Or add a site by exact coordinates</span>
+              <div class="field">
+                <label for="manualLat">Latitude</label>
+                <input id="manualLat" type="number" step="0.0001" min="-90" max="90" placeholder="30.2672" />
+              </div>
+              <div class="field">
+                <label for="manualLng">Longitude</label>
+                <input id="manualLng" type="number" step="0.0001" min="-180" max="180" placeholder="-97.7431" />
+              </div>
+              <button class="btn btn-sm" id="btnManualAdd" type="button">Add site</button>
+            </div>
+          </div>
+
+          <div class="dossier-list" id="dossierList">
+            <div class="dossier-empty" id="dossierEmpty">
+              <svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="18" stroke="currentColor" stroke-width="1" stroke-dasharray="4 4"/><path d="M20 12v16M12 20h16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              <br>No sites yet.<br>Click the map to drop your first pin.
+            </div>
+          </div>
+        </div>
+
+        <div class="stage-nav">
+          <span class="stage-note" id="stage1Note"></span>
+          <button class="btn btn-primary" id="btnToStage2" type="button" disabled>Configure council →</button>
+        </div>
+      </section>
+
+      <!-- ===================== STAGE 2: COUNCIL WEIGHTS ===================== -->
+      <section class="stage" id="stage-2" data-stage="2" hidden>
+        <div class="stage-head">
+          <h2>Set the council&rsquo;s priorities</h2>
+          <p>Each specialist gets an independent weight, 0&ndash;100. Push what matters most; the council normalizes
+            everything to 100% on its own, so the raw numbers you set are exactly what gets sent.</p>
+        </div>
+
+        <div class="panel console-panel">
+          <div class="console-strip" id="consoleStrip"></div>
+
+          <div class="workforce-toggle-row">
+            <label class="switch">
+              <input type="checkbox" id="workforceToggle" />
+              <span class="switch-track"></span>
+            </label>
+            <div class="workforce-copy">
+              <label for="workforceToggle">Include workforce &amp; livability analysis</label>
+              <p>Adds a sixth specialist that reviews the day-in-the-life of workers commuting to and living near each
+                site.</p>
+              <div class="workforce-textarea field" id="workforceTextareaWrap" hidden>
+                <label for="workerProfile">Worker profile</label>
+                <textarea id="workerProfile"
+                  placeholder="e.g. Shifts run 6am to 6pm, need urban access and a commute under 30 minutes by car."></textarea>
+              </div>
+            </div>
+          </div>
+
+          <details class="payload-toggle">
+            <summary>View the request payload this will send</summary>
+            <div style="position:relative">
+              <pre class="payload-pre mono" id="payloadPre"></pre>
+              <button class="btn btn-ghost btn-sm payload-copy" id="btnCopyPayload" type="button">Copy</button>
+            </div>
+          </details>
+        </div>
+
+        <div class="stage-nav">
+          <button class="btn btn-ghost" id="btnToStage1" type="button">← Back to sites</button>
+          <button class="btn btn-primary" id="btnRunAnalysis" type="button">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><polygon points="4,2 14,8 4,14" fill="currentColor"/></svg>
+            Run council analysis
+          </button>
+        </div>
+      </section>
+
+      <!-- ===================== STAGE 3: VERDICT ===================== -->
+      <section class="stage" id="stage-3" data-stage="3" hidden>
+        <div class="stage-head">
+          <h2>Council verdict</h2>
+          <p>Ranked by weighted score across every active specialist. Click a site for the full deliberation.</p>
+        </div>
+
+        <div class="panel summary-card">
+          <div class="summary-top">
+            <div class="eyebrow">Executive synthesis</div>
+            <span class="demo-tag">
+              <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M8 1v6l4 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/></svg>
+              Demo data
+            </span>
+          </div>
+          <div class="summary-text" id="summaryText"></div>
+          <div class="footnotes" id="summaryFootnotes"></div>
+        </div>
+
+        <div class="scoreboard-head">
+          <h2 style="font-size:1.15rem">Comparative scoreboard</h2>
+        </div>
+        <div class="table-wrap">
+          <table class="scoreboard">
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Site</th>
+                <th>Council ring</th>
+                <th>Weighted score</th>
+                <th>Cost / acre</th>
+                <th>Verdict signals</th>
+              </tr>
+            </thead>
+            <tbody id="scoreboardBody"></tbody>
+          </table>
+        </div>
+
+        <div class="stage-nav">
+          <button class="btn btn-ghost" id="btnToStage2b" type="button">← Back to council weights</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ===================== DRAWER ===================== -->
+  <div class="drawer-backdrop" id="drawerBackdrop"></div>
+  <aside class="drawer" id="drawer" aria-hidden="true">
+    <div class="drawer-head">
+      <div class="drawer-title">
+        <div class="eyebrow" id="drawerRank">Rank —</div>
+        <h3 id="drawerSiteName">Site</h3>
+        <div class="drawer-sub" id="drawerLatLng"></div>
+      </div>
+      <button class="drawer-close" id="drawerClose" type="button" aria-label="Close">✕</button>
+    </div>
+    <div class="drawer-radar-wrap" id="drawerRadarWrap"></div>
+    <div class="drawer-cpa" id="drawerCpa"></div>
+    <div id="drawerReports"></div>
+  </aside>
+
+  <!-- ===================== LOADING OVERLAY ===================== -->
+  <div class="loading-overlay" id="loadingOverlay" hidden>
+    <div class="loading-rings"><span></span><span></span><span></span><span class="ring-core"></span></div>
+    <div class="loading-title">The council is deliberating&hellip;</div>
+    <div class="loading-sub" id="loadingSub"></div>
+  </div>
+
+  <div class="toast-region" id="toastRegion"></div>
+
+  <script>
+    "use strict";
+
+    /* ============================================================
+       Static data: agents, site colors, icon paths
+       ============================================================ */
+    const ICONS = {
+      bolt: '<path d="M11 2 4 12h5l-1 8 8-11h-5l1-7z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" fill="none"/>',
+      drop: '<path d="M10 2C6 7 3 10.8 3 14a7 7 0 0 0 14 0c0-3.2-3-7-7-12z" stroke="currentColor" stroke-width="1.6" fill="none"/>',
+      leaf: '<path d="M4 16c8 1 12-3 13-13C8 4 4 8 4 16z" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M4 16c3-4 6-7 12-12" stroke="currentColor" stroke-width="1.4" fill="none"/>',
+      road: '<path d="M6 17 9 3h2l3 14" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/><path d="M10 4v2M10 8.5v2M10 13v2" stroke="currentColor" stroke-width="1.4"/>',
+      shield: '<path d="M10 2 17 5v5c0 5-3 7.5-7 8-4-.5-7-3-7-8V5l7-3z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/>',
+      people: '<circle cx="7" cy="7" r="2.6" stroke="currentColor" stroke-width="1.5" fill="none"/><circle cx="14" cy="8" r="2.1" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M2 17c0-3 2.2-4.6 5-4.6s5 1.6 5 4.6M12 17c.2-2.4 1.8-3.8 4-3.8s3.8 1.4 4 3.8" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/>',
+    };
+
+    const CORE_AGENTS = [
+      { key: 'energy_power', label: 'Energy & Power', short: 'Energy', color: 'var(--a-energy)', hex: '#FDB750', icon: ICONS.bolt },
+      { key: 'water_sewer', label: 'Water & Sewer', short: 'Water', color: 'var(--a-water)', hex: '#4FA8FF', icon: ICONS.drop },
+      { key: 'surface_environment', label: 'Surface & Environment', short: 'Surface', color: 'var(--a-surface)', hex: '#58D68D', icon: ICONS.leaf },
+      { key: 'transportation', label: 'Transportation', short: 'Transport', color: 'var(--a-transport)', hex: '#B48CFF', icon: ICONS.road },
+      { key: 'risk_compliance', label: 'Risk & Compliance', short: 'Risk', color: 'var(--a-risk)', hex: '#FF7A7A', icon: ICONS.shield },
+    ];
+    const WORKFORCE_AGENT = { key: 'workforce_livability', label: 'Workforce & Livability', short: 'Workforce', color: 'var(--a-workforce)', hex: '#FF8FCF', icon: ICONS.people };
+
+    const SITE_COLORS = ['#2FE6C2', '#FDB750', '#B48CFF', '#FF8FCF', '#4FA8FF'];
+    const MAX_SITES = 5;
+
+    function activeAgents() {
+      return state.workforceEnabled ? CORE_AGENTS.concat([WORKFORCE_AGENT]) : CORE_AGENTS;
+    }
+
+    /* ============================================================
+       State
+       ============================================================ */
+    const state = {
+      sites: [],
+      weights: { energy_power: 70, water_sewer: 70, surface_environment: 70, transportation: 70, risk_compliance: 70, workforce_livability: 70 },
+      workforceEnabled: false,
+      workerProfile: '',
+      results: null,
+    };
+
+    /* ============================================================
+       Utilities
+       ============================================================ */
+    function hashStr(str) {
+      let h = 5381;
+      for (let i = 0; i < str.length; i++) { h = ((h << 5) + h) + str.charCodeAt(i); h |= 0; }
+      return Math.abs(h);
+    }
+    function seededInt(seed, min, max) {
+      const h = hashStr(seed);
+      return min + (h % (max - min + 1));
+    }
+    function fmtMoney(n) {
+      return '$' + Number(n).toLocaleString('en-US', { maximumFractionDigits: 0 });
+    }
+    function fmtLat(n) { return n.toFixed(4); }
+    function showToast(msg) {
+      const region = document.getElementById('toastRegion');
+      const t = document.createElement('div');
+      t.className = 'toast';
+      t.textContent = msg;
+      region.appendChild(t);
+      setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .25s'; setTimeout(() => t.remove(), 250); }, 2800);
+    }
+
+    /* ============================================================
+       Map + site dossiers (Stage 1)
+       ============================================================ */
+    const MAP_W = 900, MAP_H = 520;
+    const REGIONS = {
+      world: { minLat: -58, maxLat: 78, minLng: -170, maxLng: 170, step: 30 },
+      na: { minLat: 14, maxLat: 58, minLng: -130, maxLng: -60, step: 10 },
+      eu: { minLat: 34, maxLat: 62, minLng: -12, maxLng: 40, step: 10 },
+      apac: { minLat: -45, maxLat: 48, minLng: 65, maxLng: 150, step: 15 },
+    };
+    const REGION_CITIES = {
+      world: [
+        ['New York', 40.71, -74.01], ['Los Angeles', 34.05, -118.24], ['Mexico City', 19.43, -99.13],
+        ['London', 51.51, -0.13], ['Cairo', 30.04, 31.24], ['Moscow', 55.76, 37.62],
+        ['Beijing', 39.90, 116.41], ['Tokyo', 35.68, 139.69], ['Sydney', -33.87, 151.21],
+        ['São Paulo', -23.55, -46.63], ['Lagos', 6.52, 3.38], ['Mumbai', 19.08, 72.88],
+      ],
+      na: [
+        ['Seattle', 47.61, -122.33], ['San Francisco', 37.77, -122.42], ['Los Angeles', 34.05, -118.24],
+        ['Phoenix', 33.45, -112.07], ['Denver', 39.74, -104.99], ['Dallas', 32.78, -96.80],
+        ['Austin', 30.27, -97.74], ['Houston', 29.76, -95.37], ['Chicago', 41.88, -87.63],
+        ['Atlanta', 33.75, -84.39], ['Miami', 25.76, -80.19], ['Washington DC', 38.90, -77.04],
+        ['New York', 40.71, -74.01], ['Toronto', 43.65, -79.38], ['Mexico City', 19.43, -99.13],
+      ],
+      eu: [
+        ['London', 51.51, -0.13], ['Paris', 48.86, 2.35], ['Amsterdam', 52.37, 4.90],
+        ['Berlin', 52.52, 13.41], ['Madrid', 40.42, -3.70], ['Rome', 41.90, 12.50],
+        ['Warsaw', 52.23, 21.01], ['Stockholm', 59.33, 18.07], ['Istanbul', 41.01, 28.98],
+      ],
+      apac: [
+        ['Beijing', 39.90, 116.41], ['Shanghai', 31.23, 121.47], ['Seoul', 37.57, 126.98],
+        ['Tokyo', 35.68, 139.69], ['Delhi', 28.61, 77.21], ['Mumbai', 19.08, 72.88],
+        ['Bangkok', 13.76, 100.50], ['Singapore', 1.35, 103.82], ['Jakarta', -6.21, 106.85],
+        ['Sydney', -33.87, 151.21],
+      ],
+    };
+
+    let currentRegion = 'na';
+
+    function project(lat, lng, region) {
+      const r = REGIONS[region];
+      const x = ((lng - r.minLng) / (r.maxLng - r.minLng)) * MAP_W;
+      const y = ((r.maxLat - lat) / (r.maxLat - r.minLat)) * MAP_H;
+      return [x, y];
+    }
+    function unproject(x, y, region) {
+      const r = REGIONS[region];
+      const lng = r.minLng + (x / MAP_W) * (r.maxLng - r.minLng);
+      const lat = r.maxLat - (y / MAP_H) * (r.maxLat - r.minLat);
+      return [lat, lng];
+    }
+    function inRegion(lat, lng, region) {
+      const r = REGIONS[region];
+      return lat >= r.minLat && lat <= r.maxLat && lng >= r.minLng && lng <= r.maxLng;
+    }
+
+    function svgPointFromEvent(svg, evt) {
+      const point = evt.touches ? evt.touches[0] : evt;
+      try {
+        const pt = svg.createSVGPoint();
+        pt.x = point.clientX; pt.y = point.clientY;
+        const ctm = svg.getScreenCTM();
+        if (ctm) {
+          const p = pt.matrixTransform(ctm.inverse());
+          return [p.x, p.y];
+        }
+      } catch (e) { /* fall through */ }
+      const rect = svg.getBoundingClientRect();
+      if (!rect.width || !rect.height) return [NaN, NaN];
+      return [
+        (point.clientX - rect.left) * (MAP_W / rect.width),
+        (point.clientY - rect.top) * (MAP_H / rect.height),
+      ];
+    }
+
+    function renderMapSVG() {
+      const svg = document.getElementById('mapSvg');
+      const r = REGIONS[currentRegion];
+      let g = '';
+
+      // graticule
+      for (let lat = Math.ceil(r.minLat / r.step) * r.step; lat <= r.maxLat; lat += r.step) {
+        const [, y] = project(lat, r.minLng, currentRegion);
+        const cls = lat === 0 ? 'grid-line is-equator' : 'grid-line';
+        g += `<line class="${cls}" x1="0" y1="${y.toFixed(1)}" x2="${MAP_W}" y2="${y.toFixed(1)}"/>`;
+      }
+      for (let lng = Math.ceil(r.minLng / r.step) * r.step; lng <= r.maxLng; lng += r.step) {
+        const [x] = project(r.minLat, lng, currentRegion);
+        const cls = lng === 0 ? 'grid-line is-prime' : 'grid-line';
+        g += `<line class="${cls}" x1="${x.toFixed(1)}" y1="0" x2="${x.toFixed(1)}" y2="${MAP_H}"/>`;
+      }
+
+      // reference cities
+      (REGION_CITIES[currentRegion] || []).forEach(([name, lat, lng]) => {
+        const [x, y] = project(lat, lng, currentRegion);
+        g += `<circle class="city-dot" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2.2"/>`;
+        g += `<text class="city-label" x="${(x + 6).toFixed(1)}" y="${(y + 3).toFixed(1)}">${name}</text>`;
+      });
+
+      // site pins
+      let hiddenCount = 0;
+      state.sites.forEach(site => {
+        if (!inRegion(site.lat, site.lng, currentRegion)) { hiddenCount++; return; }
+        const [x, y] = project(site.lat, site.lng, currentRegion);
+        g += `<g class="map-pin-group">
+      <circle class="map-pin-ring" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="14" stroke="${site.color}" opacity="0.25"/>
+      <circle class="map-pin-ring" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="11" stroke="${site.color}"/>
+      <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="8" fill="${site.color}"/>
+      <text class="map-pin-label" x="${x.toFixed(1)}" y="${(y + 3).toFixed(1)}" text-anchor="middle">${site.order}</text>
+    </g>`;
+      });
+
+      svg.innerHTML = g;
+
+      const note = document.getElementById('hiddenPinsNote');
+      note.textContent = hiddenCount > 0
+        ? `${hiddenCount} site${hiddenCount > 1 ? 's' : ''} outside this view — still listed below.`
+        : '';
+    }
+
+    function initGridMap() {
+      const svg = document.getElementById('mapSvg');
+      svg.addEventListener('click', (e) => {
+        const [x, y] = svgPointFromEvent(svg, e);
+        if (Number.isNaN(x) || Number.isNaN(y) || x < 0 || y < 0 || x > MAP_W || y > MAP_H) return;
+        const [lat, lng] = unproject(x, y, currentRegion);
+        addSite(lat, lng);
+      });
+      svg.addEventListener('mousemove', (e) => {
+        const [x, y] = svgPointFromEvent(svg, e);
+        const [lat, lng] = unproject(x, y, currentRegion);
+        document.getElementById('cursorReadout').textContent = `lat ${lat.toFixed(4)}, lng ${lng.toFixed(4)}`;
+      });
+      document.getElementById('regionTabs').addEventListener('click', (e) => {
+        const btn = e.target.closest('.region-tab');
+        if (!btn) return;
+        currentRegion = btn.dataset.region;
+        document.querySelectorAll('.region-tab').forEach(b => b.classList.toggle('is-active', b === btn));
+        renderMapSVG();
+      });
+      renderMapSVG();
+    }
+
+    /* ============================================================
+       Optional Google Maps (progressive enhancement)
+       ============================================================ */
+    const GOOGLE_MAPS_API_KEY = 'AIzaSyAKEmoEiK7NwUSmmKIyo7xRecwAKm65YVY'; // <-- paste your key between the quotes
+
+    let mapProvider = 'grid';
+    let gMap = null;
+    let gMarkers = {};
+    let googleLoadTimer = null;
+
+    const DARK_MAP_STYLE = [
+      { elementType: 'geometry', stylers: [{ color: '#0d1015' }] },
+      { elementType: 'labels.text.stroke', stylers: [{ color: '#0d1015' }] },
+      { elementType: 'labels.text.fill', stylers: [{ color: '#6b7280' }] },
+      { featureType: 'administrative', elementType: 'geometry.stroke', stylers: [{ color: '#262b35' }] },
+      { featureType: 'administrative.land_parcel', stylers: [{ visibility: 'off' }] },
+      { featureType: 'administrative.locality', elementType: 'labels.text.fill', stylers: [{ color: '#aeb6c2' }] },
+      { featureType: 'landscape', elementType: 'geometry', stylers: [{ color: '#12151b' }] },
+      { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+      { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#152019' }] },
+      { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#1c212a' }] },
+      { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#6b7280' }] },
+      { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#262b35' }] },
+      { featureType: 'road.highway', elementType: 'labels.text.fill', stylers: [{ color: '#8a93a1' }] },
+      { featureType: 'road.local', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+      { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+      { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#08272a' }] },
+      { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#2fe6c2' }] },
+    ];
+
+    function setProvider(p) {
+      mapProvider = p;
+      
+      const svg = document.getElementById('mapSvg');
+      const gmap = document.getElementById('googleMapDiv');
+      const tbGrid = document.querySelector('.toolbar-grid');
+      const tbGoogle = document.querySelector('.toolbar-google');
+      
+      svg.hidden = (p !== 'grid');
+      svg.style.display = (p === 'grid') ? 'block' : 'none';
+      
+      gmap.hidden = (p !== 'google');
+      gmap.style.display = (p === 'google') ? 'block' : 'none';
+      
+      tbGrid.hidden = (p !== 'grid');
+      tbGrid.style.display = (p === 'grid') ? 'flex' : 'none';
+      
+      tbGoogle.hidden = (p !== 'google');
+      tbGoogle.style.display = (p === 'google') ? 'flex' : 'none';
+      
+      refreshProviderToggleUI();
+    }
+
+    function refreshProviderToggleUI() {
+      const btn = document.getElementById('btnToggleProvider');
+      const hint = document.getElementById('mapHintText');
+      if (!(GOOGLE_MAPS_API_KEY && GOOGLE_MAPS_API_KEY.trim())) { btn.hidden = true; return; }
+      btn.hidden = false;
+      if (mapProvider === 'google') {
+        btn.textContent = 'Switch to built-in grid';
+        hint.textContent = 'Click anywhere on the map, or search above, to drop a site';
+      } else {
+        btn.textContent = gMap ? 'Switch to Google Maps' : 'Try Google Maps';
+        hint.textContent = 'Click anywhere on the grid to drop a site';
+      }
+    }
+
+    function loadGoogleMaps() {
+      window.gm_authFailure = () => {
+        showToast('Google rejected that Maps key — staying on the built-in grid.');
+      };
+      window.__mireyeGMapsReady = () => {
+        clearTimeout(googleLoadTimer);
+        try { initGoogleMap(); }
+        catch (err) { console.error(err); showToast('Google Maps failed to start — staying on the built-in grid.'); }
+      };
+      const script = document.createElement('script');
+      script.async = true;
+      script.src = 'https://maps.googleapis.com/maps/api/js?key=' + encodeURIComponent(GOOGLE_MAPS_API_KEY.trim()) +
+        '&libraries=places&v=weekly&callback=__mireyeGMapsReady';
+      script.onerror = () => showToast('Could not reach Google Maps — staying on the built-in grid.');
+      document.head.appendChild(script);
+      googleLoadTimer = setTimeout(() => {
+        if (mapProvider !== 'google') showToast('Google Maps is taking too long — staying on the built-in grid.');
+      }, 8000);
+    }
+
+    function gMarkerIcon(color) {
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"><circle cx="14" cy="14" r="10.5" fill="${color}" stroke="#0A0C10" stroke-width="2"/></svg>`;
+      return {
+        url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg),
+        scaledSize: new google.maps.Size(28, 28),
+        anchor: new google.maps.Point(14, 14),
+      };
+    }
+
+    function initGoogleMap() {
+      const div = document.getElementById('googleMapDiv');
+      gMap = new google.maps.Map(div, {
+        center: { lat: 31.9686, lng: -99.9018 },
+        zoom: 5,
+        styles: DARK_MAP_STYLE,
+        streetViewControl: false,
+        clickableIcons: false,
+      });
+      gMap.addListener('click', (e) => addSite(e.latLng.lat(), e.latLng.lng()));
+
+      const input = document.getElementById('placeSearch');
+      if (google.maps.places) {
+        const autocomplete = new google.maps.places.Autocomplete(input, { fields: ['geometry', 'name'] });
+        autocomplete.bindTo('bounds', gMap);
+        autocomplete.addListener('place_changed', () => {
+          const place = autocomplete.getPlace();
+          if (!place.geometry || !place.geometry.location) { showToast('No location found for that search.'); return; }
+          gMap.panTo(place.geometry.location);
+          gMap.setZoom(11);
+          addSite(place.geometry.location.lat(), place.geometry.location.lng());
+          input.value = '';
+        });
+      }
+
+      setProvider('google');
+      renderGoogleMarkers();
+    }
+
+    function renderGoogleMarkers() {
+      if (mapProvider !== 'google' || !gMap) return;
+      Object.keys(gMarkers).forEach(id => {
+        if (!state.sites.find(s => s.id === id)) { gMarkers[id].setMap(null); delete gMarkers[id]; }
+      });
+      state.sites.forEach(site => {
+        const label = { text: String(site.order), color: '#0A0C10', fontFamily: 'JetBrains Mono, monospace', fontWeight: '700', fontSize: '11px' };
+        if (gMarkers[site.id]) {
+          gMarkers[site.id].setIcon(gMarkerIcon(site.color));
+          gMarkers[site.id].setLabel(label);
+        } else {
+          const marker = new google.maps.Marker({
+            position: { lat: site.lat, lng: site.lng },
+            map: gMap, draggable: true, icon: gMarkerIcon(site.color), label,
+          });
+          marker.addListener('dragend', () => {
+            const pos = marker.getPosition();
+            site.lat = pos.lat(); site.lng = pos.lng();
+            renderDossiers();
+          });
+          gMarkers[site.id] = marker;
+        }
+      });
+    }
+
+    function renderMap() {
+      if (mapProvider === 'google') renderGoogleMarkers();
+      else renderMapSVG();
+    }
+
+    document.getElementById('btnToggleProvider').addEventListener('click', () => {
+      if (mapProvider === 'google') { setProvider('grid'); renderMap(); }
+      else if (gMap) { setProvider('google'); renderMap(); }
+      else { loadGoogleMaps(); }
+    });
+
+    function addSite(lat, lng) {
+      if (state.sites.length >= MAX_SITES) {
+        showToast('The council reviews at most 5 sites — remove one to add another.');
+        return;
+      }
+      if (!(lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) || Number.isNaN(lat) || Number.isNaN(lng)) {
+        showToast('Enter a valid latitude (-90 to 90) and longitude (-180 to 180).');
+        return;
+      }
+      const id = 'site_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+      const order = state.sites.length + 1;
+      const color = SITE_COLORS[state.sites.length % SITE_COLORS.length];
+      const site = { id, order, lat, lng, label: '', cost: '', area: '', color };
+      state.sites.push(site);
+
+      renderMap();
+      renderDossiers();
+      syncStage1Gate();
+    }
+
+    function removeSite(id) {
+      const idx = state.sites.findIndex(s => s.id === id);
+      if (idx === -1) return;
+      state.sites.splice(idx, 1);
+      state.sites.forEach((s, i) => {
+        s.order = i + 1;
+        s.color = SITE_COLORS[i % SITE_COLORS.length];
+      });
+      renderMap();
+      renderDossiers();
+      syncStage1Gate();
+    }
+
+    function renderDossiers() {
+      const list = document.getElementById('dossierList');
+      const empty = document.getElementById('dossierEmpty');
+      document.getElementById('pinCount').textContent = state.sites.length;
+
+      list.querySelectorAll('.dossier-card').forEach(el => el.remove());
+      empty.hidden = state.sites.length > 0;
+
+      state.sites.forEach(site => {
+        const card = document.createElement('div');
+        card.className = 'dossier-card';
+        card.style.setProperty('--site-color', site.color);
+        card.innerHTML = `
+      <div class="dossier-card-head">
+        <span class="dossier-tag">SITE ${site.order}</span>
+        <button class="icon-btn" data-remove="${site.id}" type="button" aria-label="Remove site">✕</button>
+      </div>
+      <div class="field">
+        <label for="label_${site.id}">Label</label>
+        <input id="label_${site.id}" type="text" placeholder="e.g. Austin Gigafactory" data-field="label" data-id="${site.id}" value="${site.label}" />
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="cost_${site.id}">Cost (USD, optional)</label>
+          <input id="cost_${site.id}" type="number" min="0" placeholder="5000000" data-field="cost" data-id="${site.id}" value="${site.cost}" />
+        </div>
+        <div class="field">
+          <label for="area_${site.id}">Area (acres, optional)</label>
+          <input id="area_${site.id}" type="number" min="0" placeholder="50" data-field="area" data-id="${site.id}" value="${site.area}" />
+        </div>
+      </div>
+      <div class="latlng-row">
+        <span>lat ${fmtLat(site.lat)}</span>
+        <span>lng ${fmtLat(site.lng)}</span>
+      </div>
+      <div class="cpa-hint" data-cpa="${site.id}"></div>
+    `;
+        list.appendChild(card);
+        updateCpaHint(site.id);
+      });
+    }
+
+    function updateCpaHint(id) {
+      const site = state.sites.find(s => s.id === id);
+      const el = document.querySelector(`[data-cpa="${id}"]`);
+      if (!site || !el) return;
+      const cost = parseFloat(site.cost), area = parseFloat(site.area);
+      if (cost > 0 && area > 0) {
+        el.textContent = `≈ ${fmtMoney(cost / area)} / acre`;
+      } else {
+        el.textContent = '';
+      }
+    }
+
+    document.addEventListener('input', (e) => {
+      const t = e.target;
+      if (t.matches('[data-field][data-id]')) {
+        const site = state.sites.find(s => s.id === t.dataset.id);
+        if (!site) return;
+        site[t.dataset.field] = t.value;
+        updateCpaHint(site.id);
+        syncStage1Gate();
+        updatePayloadPreview();
+      }
+    });
+    document.addEventListener('click', (e) => {
+      const rm = e.target.closest('[data-remove]');
+      if (rm) { removeSite(rm.dataset.remove); }
+    });
+
+    function syncStage1Gate() {
+      const labeled = state.sites.filter(s => s.label.trim().length > 0);
+      const btn = document.getElementById('btnToStage2');
+      const note = document.getElementById('stage1Note');
+      btn.disabled = labeled.length < 1;
+      if (labeled.length === 0) {
+        note.textContent = 'Add a label to at least one site to continue.';
+      } else if (labeled.length === 1) {
+        note.textContent = 'Add a second site for a real comparison — one site alone won\u2019t rank.';
+      } else {
+        note.textContent = `${labeled.length} sites ready for council review.`;
+      }
+    }
+
+    /* ============================================================
+       Stepper / stage navigation
+       ============================================================ */
+    function goToStage(n) {
+      document.querySelectorAll('.stage').forEach(s => { s.hidden = Number(s.dataset.stage) !== n; });
+      document.querySelectorAll('.step').forEach(st => {
+        const sn = Number(st.dataset.goto);
+        st.classList.toggle('is-active', sn === n);
+        st.classList.toggle('is-done', sn < n);
+      });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    document.querySelectorAll('.step').forEach(st => {
+      st.addEventListener('click', () => {
+        if (st.disabled) return;
+        goToStage(Number(st.dataset.goto));
+      });
+    });
+    document.getElementById('btnToStage2').addEventListener('click', () => {
+      document.querySelector('.step[data-goto="2"]').disabled = false;
+      renderConsole();
+      updatePayloadPreview();
+      goToStage(2);
+    });
+    document.getElementById('btnToStage1').addEventListener('click', () => goToStage(1));
+    document.getElementById('btnToStage2b').addEventListener('click', () => goToStage(2));
+
+    /* ============================================================
+       Stage 2: Deliberation console
+       ============================================================ */
+    function renderConsole() {
+      const strip = document.getElementById('consoleStrip');
+      strip.innerHTML = '';
+      activeAgents().forEach(agent => {
+        const val = state.weights[agent.key] ?? 70;
+        const ch = document.createElement('div');
+        ch.className = 'channel' + (agent.key === 'workforce_livability' ? ' is-workforce' : '');
+        ch.style.setProperty('--agent-color', agent.color);
+        ch.innerHTML = `
+      <div class="channel-glyph">${'<svg viewBox="0 0 20 20">' + agent.icon + '</svg>'}</div>
+      <div class="fader-track">
+        <input class="fader-input" type="range" min="0" max="100" value="${val}" data-weight="${agent.key}" style="--val:${val}%" aria-label="${agent.label} weight"/>
+      </div>
+      <div class="channel-readout" data-readout="${agent.key}">${val}</div>
+      <div class="channel-label">${agent.label}</div>
+    `;
+        strip.appendChild(ch);
+      });
+    }
+
+    document.addEventListener('input', (e) => {
+      const t = e.target;
+      if (t.matches('[data-weight]')) {
+        const key = t.dataset.weight;
+        state.weights[key] = Number(t.value);
+        t.style.setProperty('--val', t.value + '%');
+        const readout = document.querySelector(`[data-readout="${key}"]`);
+        if (readout) readout.textContent = t.value;
+        updatePayloadPreview();
+      }
+    });
+
+    document.getElementById('workforceToggle').addEventListener('change', (e) => {
+      state.workforceEnabled = e.target.checked;
+      document.getElementById('workforceTextareaWrap').hidden = !e.target.checked;
+      renderConsole();
+      updatePayloadPreview();
+    });
+    document.getElementById('workerProfile').addEventListener('input', (e) => {
+      state.workerProfile = e.target.value;
+      updatePayloadPreview();
+    });
+
+    function buildPayload() {
+      const sites = state.sites.filter(s => s.label.trim()).map(s => {
+        const o = { lat: Number(s.lat.toFixed(6)), lng: Number(s.lng.toFixed(6)), label: s.label.trim() };
+        if (s.cost !== '' && s.cost != null) o.cost_usd = Number(s.cost);
+        if (s.area !== '' && s.area != null) o.area_acres = Number(s.area);
+        return o;
+      });
+      const weights = {};
+      CORE_AGENTS.forEach(a => weights[a.key] = state.weights[a.key]);
+      if (state.workforceEnabled) weights.workforce_livability = state.weights.workforce_livability;
+      const payload = { sites, weights };
+      if (state.workforceEnabled) payload.worker_profile = state.workerProfile || '';
+      return payload;
+    }
+
+    function updatePayloadPreview() {
+      const pre = document.getElementById('payloadPre');
+      if (pre) pre.textContent = JSON.stringify(buildPayload(), null, 2);
+    }
+
+    document.getElementById('btnCopyPayload').addEventListener('click', () => {
+      const text = document.getElementById('payloadPre').textContent;
+      navigator.clipboard?.writeText(text).then(() => showToast('Payload copied to clipboard.'))
+        .catch(() => showToast('Could not copy — select and copy manually.'));
+    });
+
+    /* ============================================================
+       Mock council run
+       ============================================================ */
+    const MEMO_BANK = {
+      energy_power: {
+        good: s => `Grid interconnect capacity near ${s} comfortably covers projected load, with an energized substation within a few miles.`,
+        mid: s => `Interconnect queue times near ${s} run long — a dedicated substation upgrade is likely before energization.`,
+        risk: s => `Regional transmission capacity near ${s} is tight; expect meaningful interconnect delay and upgrade cost.`,
+      },
+      water_sewer: {
+        good: s => `Municipal water and sewer capacity at ${s} has headroom for industrial draw without new permitting.`,
+        mid: s => `${s} sits near the edge of current utility district capacity — a capacity study is recommended before committing.`,
+        risk: s => `Water rights and sewer capacity near ${s} are constrained; a private well or treatment package may be required.`,
+      },
+      surface_environment: {
+        good: s => `Soil and terrain at ${s} are favorable for large-footprint construction, with no flagged wetlands on record.`,
+        mid: s => `${s} has moderate grading needs and a partial wetlands overlap that should be surveyed before permitting.`,
+        risk: s => `Environmental review at ${s} flags protected habitat and steep grading — expect extended permitting timelines.`,
+      },
+      transportation: {
+        good: s => `${s} sits within easy reach of a major freight corridor, with road capacity to support heavy construction traffic.`,
+        mid: s => `Access to ${s} is workable but relies on a single two-lane route that may need widening for peak traffic.`,
+        risk: s => `Freight and commuter access to ${s} is limited; road upgrades would likely be a prerequisite for operations.`,
+      },
+      risk_compliance: {
+        good: s => `${s} carries low flood and seismic exposure, and zoning already permits the proposed use.`,
+        mid: s => `${s} requires a zoning variance and sits in a moderate flood-risk band worth budgeting insurance for.`,
+        risk: s => `${s} falls inside a higher flood-risk zone and current zoning would need a formal rezoning process.`,
+      },
+      workforce_livability: {
+        good: s => `Commute times to ${s} stay under the target window for most of the regional labor pool, with nearby housing stock.`,
+        mid: s => `Workers commuting to ${s} face longer drive times than ideal; local housing supply is thin at entry-level price points.`,
+        risk: s => `${s} sits far from the regional labor pool, and commute and housing gaps would likely affect retention.`,
+      },
+    };
+    const CITATION_SOURCES = {
+      energy_power: [{ label: 'Regional Grid Interconnection Queue Report', domain: 'ercot.com' }, { label: 'EIA Regional Grid Capacity Data', domain: 'eia.gov' }],
+      water_sewer: [{ label: 'Municipal Utility Capacity Filing', domain: 'puc.texas.gov' }, { label: 'USGS Water Availability Dataset', domain: 'usgs.gov' }],
+      surface_environment: [{ label: 'EPA Environmental Site Assessment Database', domain: 'epa.gov' }, { label: 'USDA Soil Survey', domain: 'websoilsurvey.nrcs.usda.gov' }],
+      transportation: [{ label: 'State DOT Freight Corridor Analysis', domain: 'dot.state.tx.us' }, { label: 'DOT National Freight Network', domain: 'transportation.gov' }],
+      risk_compliance: [{ label: 'FEMA Flood Zone Mapping', domain: 'msc.fema.gov' }, { label: 'County Zoning & Permitting Records', domain: 'county.gov' }],
+      workforce_livability: [{ label: 'BLS Regional Labor Statistics', domain: 'bls.gov' }, { label: 'Census Commuting Patterns Survey', domain: 'census.gov' }],
+    };
+    function tierFor(score) {
+      if (score >= 75) return { label: 'Strong Fit', color: '#34D399', bg: 'rgba(52,211,153,0.12)' };
+      if (score >= 58) return { label: 'Favorable', color: '#34D399', bg: 'rgba(52,211,153,0.12)' };
+      if (score >= 42) return { label: 'Moderate', color: '#FBBF24', bg: 'rgba(251,191,36,0.12)' };
+      if (score >= 28) return { label: 'Constrained', color: '#FB923C', bg: 'rgba(251,146,60,0.12)' };
+      return { label: 'High Risk', color: '#F87171', bg: 'rgba(248,113,113,0.12)' };
+    }
+    function memoTierKey(score) { return score >= 65 ? 'good' : score >= 42 ? 'mid' : 'risk'; }
+
+    function generateMockResults(payload) {
+      const agents = activeAgents();
+      const perSite = payload.sites.map(site => {
+        const agentScores = {};
+        const agentDetail = {};
+        agents.forEach(agent => {
+          const score = seededInt(site.label + '::' + agent.key, 22, 96);
+          const tier = memoTierKey(score);
+          const hasGap = seededInt(site.label + agent.key + 'gap', 0, 9) < 3;
+          const src = CITATION_SOURCES[agent.key][seededInt(site.label + agent.key + 'src', 0, 1)];
+          agentScores[agent.key] = score;
+          agentDetail[agent.key] = {
+            score,
+            verdict: tierFor(score).label,
+            memo: MEMO_BANK[agent.key][tier](site.label),
+            data_gaps: hasGap ? [`${agent.label} public data was incomplete for this area — estimate derived from comparable regional sites.`] : [],
+            citations: [{ label: src.label, source_url: `https://${src.domain}/reports/${site.label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}` }],
+          };
+        });
+        let wsum = 0, sum = 0;
+        agents.forEach(a => { const w = payload.weights[a.key] || 0; wsum += w; sum += agentScores[a.key] * w; });
+        const weighted = wsum > 0 ? Math.round(sum / wsum) : Math.round(agents.reduce((acc, a) => acc + agentScores[a.key], 0) / agents.length);
+        const sorted = agents.slice().sort((a, b) => agentScores[b.key] - agentScores[a.key]);
+        const cost = site.cost_usd, area = site.area_acres;
+        return {
+          label: site.label, lat: site.lat, lng: site.lng,
+          cost_usd: cost, area_acres: area,
+          cost_per_acre: (cost && area) ? cost / area : null,
+          weighted, agentScores, agentDetail,
+          topAgent: sorted[0], bottomAgent: sorted[sorted.length - 1],
+        };
+      });
+      perSite.sort((a, b) => b.weighted - a.weighted);
+
+      const top = perSite[0], second = perSite[1];
+      let synthesis = `${top.label} leads the council with a weighted score of ${top.weighted}/100, driven chiefly by its ` +
+        `${top.topAgent.label.toLowerCase()} standing`;
+      const cites = [];
+      if (top.agentDetail[top.topAgent.key].citations[0]) {
+        cites.push({ n: 1, label: top.agentDetail[top.topAgent.key].citations[0].label, url: top.agentDetail[top.topAgent.key].citations[0].source_url });
+        synthesis += ` [1]`;
+      }
+      synthesis += `.`;
+      if (second) {
+        synthesis += ` ${second.label} trails at ${second.weighted}/100 — its ${second.bottomAgent.label.toLowerCase()} profile is the main drag on the score`;
+        if (second.agentDetail[second.bottomAgent.key].citations[0]) {
+          cites.push({ n: 2, label: second.agentDetail[second.bottomAgent.key].citations[0].label, url: second.agentDetail[second.bottomAgent.key].citations[0].source_url });
+          synthesis += ` [2]`;
+        }
+        synthesis += `, though it remains competitive on cost-adjusted terms if land value matters most to this decision.`;
+      }
+      return { sites: perSite, synthesis, synthesis_citations: cites };
+    }
+
+    function runCouncilAnalysis(payload) {
+      return new Promise(resolve => {
+        setTimeout(() => resolve(generateMockResults(payload)), 1800);
+      });
+    }
+
+    document.getElementById('btnRunAnalysis').addEventListener('click', async () => {
+      const payload = buildPayload();
+      if (payload.sites.length < 1) { showToast('Add at least one labeled site first.'); return; }
+      const overlay = document.getElementById('loadingOverlay');
+      document.getElementById('loadingSub').textContent =
+        `Weighing ${activeAgents().map(a => a.short).join(', ')} across ${payload.sites.length} site${payload.sites.length > 1 ? 's' : ''}.`;
+      overlay.hidden = false;
+      const results = await runCouncilAnalysis(payload);
+      state.results = results;
+      overlay.hidden = true;
+      document.querySelector('.step[data-goto="3"]').disabled = false;
+      renderDashboard();
+      goToStage(3);
+    });
+
+    /* ============================================================
+       Radar / Council Ring
+       ============================================================ */
+    function radarSVG(agents, scores, size, opts) {
+      opts = opts || {};
+      const showLabels = !!opts.labels;
+      const cx = size / 2, cy = size / 2;
+      const rMax = size / 2 - (showLabels ? size * 0.22 : size * 0.12);
+      const n = agents.length;
+      const pt = (i, frac) => {
+        const angle = -Math.PI / 2 + i * (2 * Math.PI / n);
+        return [cx + Math.cos(angle) * rMax * frac, cy + Math.sin(angle) * rMax * frac];
+      };
+      let svg = `<svg class="radar-svg" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" aria-hidden="true">`;
+      [0.33, 0.66, 1].forEach(f => {
+        let d = '';
+        for (let i = 0; i < n; i++) { const [x, y] = pt(i, f); d += (i === 0 ? 'M' : 'L') + x.toFixed(1) + ',' + y.toFixed(1) + ' '; }
+        svg += `<path class="radar-grid" d="${d}Z"/>`;
+      });
+      agents.forEach((a, i) => {
+        const [x, y] = pt(i, 1);
+        svg += `<line class="radar-axis" x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="${a.hex}"/>`;
+      });
+      let poly = '';
+      agents.forEach((a, i) => {
+        const frac = (scores[a.key] || 0) / 100;
+        const [x, y] = pt(i, frac);
+        poly += (i === 0 ? 'M' : 'L') + x.toFixed(1) + ',' + y.toFixed(1) + ' ';
+      });
+      svg += `<path class="radar-poly" d="${poly}Z"/>`;
+      agents.forEach((a, i) => {
+        const frac = (scores[a.key] || 0) / 100;
+        const [x, y] = pt(i, frac);
+        svg += `<circle class="radar-dot" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${size * 0.028}" fill="${a.hex}"/>`;
+      });
+      if (showLabels) {
+        agents.forEach((a, i) => {
+          const [x, y] = pt(i, 1.28);
+          svg += `<text class="radar-label" x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" dominant-baseline="middle">${a.short}</text>`;
+        });
+      }
+      svg += `</svg>`;
+      return svg;
+    }
+
+    /* ============================================================
+       Stage 3: Dashboard
+       ============================================================ */
+    function renderDashboard() {
+      const results = state.results;
+      const agents = activeAgents();
+
+      const summaryEl = document.getElementById('summaryText');
+      let text = results.synthesis;
+      results.synthesis_citations.forEach(c => {
+        text = text.replace(`[${c.n}]`, `<a class="cite" href="#fn${c.n}">[${c.n}]</a>`);
+      });
+      summaryEl.innerHTML = text;
+
+      const fn = document.getElementById('summaryFootnotes');
+      fn.innerHTML = results.synthesis_citations.map(c =>
+        `<div id="fn${c.n}">[${c.n}] <a href="${c.url}" target="_blank" rel="noopener">${c.label}</a></div>`
+      ).join('');
+
+      const body = document.getElementById('scoreboardBody');
+      body.innerHTML = '';
+      results.sites.forEach((site, idx) => {
+        const rank = idx + 1;
+        const posBadge = `<span class="badge pos">▲ ${site.topAgent.short}</span>`;
+        const negBadge = `<span class="badge neg">▼ ${site.bottomAgent.short}</span>`;
+        const cpa = site.cost_per_acre ? fmtMoney(site.cost_per_acre) : '—';
+        const origSite = state.sites.find(s => s.label.trim() === site.label);
+        const swatch = origSite ? origSite.color : '#2FE6C2';
+        const tr = document.createElement('tr');
+        tr.dataset.siteLabel = site.label;
+        tr.innerHTML = `
+      <td class="rank-cell ${rank === 1 ? 'is-first' : ''}">${String(rank).padStart(2, '0')}</td>
+      <td>
+        <div class="site-cell">
+          <span class="site-swatch" style="--c:${swatch}"></span>
+          <div>
+            <div class="site-name">${site.label}</div>
+            <div class="site-sub">${fmtLat(site.lat)}, ${fmtLat(site.lng)}</div>
+          </div>
+        </div>
+      </td>
+      <td>${radarSVG(agents, site.agentScores, 56)}</td>
+      <td class="score-cell">${site.weighted}<small>/100</small></td>
+      <td class="mono" style="font-size:0.85rem">${cpa}</td>
+      <td class="badges-cell">${posBadge}${negBadge}</td>
+    `;
+        tr.addEventListener('click', () => openDrawer(site, rank));
+        body.appendChild(tr);
+      });
+    }
+
+    /* ============================================================
+       Drawer (deep dive)
+       ============================================================ */
+    function openDrawer(site, rank) {
+      const agents = activeAgents();
+      document.getElementById('drawerRank').textContent = `Rank ${String(rank).padStart(2, '0')} · Weighted score ${site.weighted}/100`;
+      document.getElementById('drawerSiteName').textContent = site.label;
+      document.getElementById('drawerLatLng').textContent = `${fmtLat(site.lat)}, ${fmtLat(site.lng)}`;
+      document.getElementById('drawerRadarWrap').innerHTML = radarSVG(agents, site.agentScores, 220, { labels: true });
+      document.getElementById('drawerCpa').innerHTML = site.cost_per_acre
+        ? `<b>${fmtMoney(site.cost_per_acre)}</b> per acre &middot; ${fmtMoney(site.cost_usd)} total &middot; ${site.area_acres} acres`
+        : 'No cost or acreage supplied for this site.';
+
+      const reports = document.getElementById('drawerReports');
+      reports.innerHTML = agents.map(agent => {
+        const d = site.agentDetail[agent.key];
+        const tier = tierFor(d.score);
+        const gap = d.data_gaps.length
+          ? `<div class="agent-gap">⚠️ ${d.data_gaps[0]}</div>` : '';
+        const cites = d.citations.map(c => `<a class="agent-cite-chip" href="${c.source_url}" target="_blank" rel="noopener">${c.label}</a>`).join('');
+        return `
+      <div class="agent-report" style="--agent-color:${agent.hex}">
+        <div class="agent-report-head">
+          <div class="agent-report-name">
+            <span class="channel-glyph" style="color:${agent.hex}"><svg viewBox="0 0 20 20">${agent.icon}</svg></span>
+            ${agent.label}
+          </div>
+          <div class="agent-score">${d.score}</div>
+        </div>
+        <div class="agent-verdict" style="color:${tier.color};background:${tier.bg}">${d.verdict}</div>
+        <div class="agent-memo">${d.memo}</div>
+        ${gap}
+        <div class="agent-cites">${cites}</div>
+      </div>
+    `;
+      }).join('');
+
+      document.getElementById('drawer').classList.add('is-open');
+      document.getElementById('drawer').setAttribute('aria-hidden', 'false');
+      document.getElementById('drawerBackdrop').classList.add('is-open');
+    }
+    function closeDrawer() {
+      document.getElementById('drawer').classList.remove('is-open');
+      document.getElementById('drawer').setAttribute('aria-hidden', 'true');
+      document.getElementById('drawerBackdrop').classList.remove('is-open');
+    }
+    document.getElementById('drawerClose').addEventListener('click', closeDrawer);
+    document.getElementById('drawerBackdrop').addEventListener('click', closeDrawer);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDrawer(); });
+
+    /* ============================================================
+       Example data + reset
+       ============================================================ */
+    function loadExample() {
+      resetSession(true);
+      currentRegion = 'na';
+      document.querySelectorAll('.region-tab').forEach(b => b.classList.toggle('is-active', b.dataset.region === 'na'));
+      const examples = [
+        { lat: 30.1997, lng: -97.4964, label: 'Cedar Creek, TX', cost: 5000000, area: 50 },
+        { lat: 33.4484, lng: -96.9942, label: 'McKinney, TX', cost: 8200000, area: 64 },
+        { lat: 29.4241, lng: -98.4936, label: 'San Antonio South, TX', cost: 3400000, area: 41 },
+      ];
+      examples.forEach(ex => {
+        addSite(ex.lat, ex.lng);
+        const s = state.sites[state.sites.length - 1];
+        s.label = ex.label; s.cost = ex.cost; s.area = ex.area;
+      });
+      renderMap();
+      renderDossiers();
+      syncStage1Gate();
+      showToast('Loaded 3 example sites — review and continue.');
+    }
+    document.getElementById('btnExample').addEventListener('click', loadExample);
+
+    document.getElementById('btnManualAdd').addEventListener('click', () => {
+      const latEl = document.getElementById('manualLat');
+      const lngEl = document.getElementById('manualLng');
+      const lat = parseFloat(latEl.value);
+      const lng = parseFloat(lngEl.value);
+      if (Number.isNaN(lat) || Number.isNaN(lng)) {
+        showToast('Enter both a latitude and a longitude first.');
+        return;
+      }
+      addSite(lat, lng);
+      latEl.value = ''; lngEl.value = '';
+    });
+
+    function resetSession(silent) {
+      state.sites = [];
+      state.results = null;
+      state.workforceEnabled = false;
+      state.workerProfile = '';
+      CORE_AGENTS.concat([WORKFORCE_AGENT]).forEach(a => state.weights[a.key] = 70);
+      document.getElementById('workforceToggle').checked = false;
+      document.getElementById('workforceTextareaWrap').hidden = true;
+      document.getElementById('workerProfile').value = '';
+      renderMap();
+      renderDossiers();
+      syncStage1Gate();
+      document.querySelector('.step[data-goto="2"]').disabled = true;
+      document.querySelector('.step[data-goto="3"]').disabled = true;
+      goToStage(1);
+      if (!silent) showToast('Session reset.');
+    }
+    document.getElementById('btnReset').addEventListener('click', () => resetSession(false));
+
+    /* ============================================================
+       Boot
+       ============================================================ */
+    initGridMap();
+    refreshProviderToggleUI();
+    syncStage1Gate();
+    if (GOOGLE_MAPS_API_KEY && GOOGLE_MAPS_API_KEY.trim()) {
+      loadGoogleMaps();
+    }
+  </script>
+</body>
+
+</html>
