@@ -44,6 +44,11 @@ credentials.json
 *.sqlite3
 backend/*.db
 
+# Documentation, Fixtures & Scratch
+docs/
+fixtures/
+scratch/
+
 # Log & Temporary Files
 *.log
 *.tmp
