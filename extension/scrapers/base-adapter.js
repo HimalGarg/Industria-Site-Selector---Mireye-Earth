@@ -153,25 +153,26 @@ class BaseAdapter {
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        padding: 8px 16px;
-        background: linear-gradient(135deg, #0d111a 0%, #0a1b22 100%);
-        color: #00d4b4;
-        border: 1px solid rgba(0, 212, 180, 0.4);
+        padding: 9px 18px;
+        background: rgba(21, 28, 40, 0.85);
+        backdrop-filter: blur(12px);
+        color: #4EDEA3;
+        border: 1px solid rgba(78, 222, 163, 0.4);
         border-radius: 8px;
-        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        font-family: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
         font-size: 13px;
         font-weight: 600;
         cursor: pointer;
         letter-spacing: 0.01em;
-        transition: all 180ms cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 15px rgba(78, 222, 163, 0.15);
         z-index: 999;
       }
       #sr-capture-btn:hover {
-        background: linear-gradient(135deg, #121824 0%, #0d252e 100%);
-        border-color: #00d4b4;
-        box-shadow: 0 4px 18px rgba(0, 212, 180, 0.35);
-        transform: translateY(-1px);
+        background: rgba(28, 32, 40, 0.95);
+        border-color: #4EDEA3;
+        box-shadow: 0 6px 25px rgba(0, 0, 0, 0.5), 0 0 25px rgba(78, 222, 163, 0.35);
+        transform: translateY(-2px);
       }
       #sr-capture-btn:active {
         transform: translateY(0) scale(0.98);
@@ -186,15 +187,15 @@ class BaseAdapter {
         flex-shrink: 0;
       }
       #sr-capture-btn.sr-success {
-        border-color: #34d399;
-        color: #34d399;
-        background: rgba(52, 211, 153, 0.12);
-        box-shadow: 0 2px 12px rgba(52, 211, 153, 0.3);
+        border-color: #10B981;
+        color: #4EDEA3;
+        background: rgba(16, 185, 129, 0.2);
+        box-shadow: 0 0 20px rgba(78, 222, 163, 0.4);
       }
       #sr-capture-btn.sr-error {
-        border-color: #f87171;
-        color: #f87171;
-        background: rgba(248, 113, 113, 0.12);
+        border-color: #FFB4AB;
+        color: #FFB4AB;
+        background: rgba(147, 0, 10, 0.4);
       }
       .sr-site-badge {
         font-size: 9px;

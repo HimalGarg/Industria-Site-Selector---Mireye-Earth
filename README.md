@@ -76,7 +76,25 @@ Once started, access the backend at:
 
 ---
 
-### Step 3: Install the Chrome Extension
+### Step 3: Launch the React Web Dashboard
+
+```bash
+# Navigate to the frontend directory
+cd frontend
+
+# Install dependencies
+npm install
+
+# Start Vite dev server
+npm run dev
+```
+
+Once started, open the web app at:
+* 🖥️ **Site Ranker Web App**: `http://localhost:5173/`
+
+---
+
+### Step 4: Install the Chrome Extension
 
 1. Open Google Chrome and go to `chrome://extensions`
 2. Turn on **Developer mode** (toggle switch in the top-right corner)

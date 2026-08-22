@@ -437,17 +437,19 @@ def add_cart_item(item: CartItemIn) -> CartItemOut:
 
 @app.get("/cart-items", response_model=list[CartItemFull])
 def get_cart_items(
-    session_id: str = Query(..., description="Session ID to filter by"),
+    session_id: Optional[str] = Query(None, description="Optional Session ID to filter by"),
 ) -> list[CartItemFull]:
-    """Return all cart items for a session, newest first."""
-    if not session_id.strip():
-        raise HTTPException(status_code=400, detail="session_id query param is required")
-
+    """Return all cart items for a session (or all items if session_id is omitted), newest first."""
     with get_db() as conn:
-        rows = conn.execute(
-            "SELECT * FROM cart_items WHERE session_id = ? ORDER BY added_at DESC",
-            (session_id,),
-        ).fetchall()
+        if session_id and session_id.strip():
+            rows = conn.execute(
+                "SELECT * FROM cart_items WHERE session_id = ? ORDER BY added_at DESC",
+                (session_id.strip(),),
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                "SELECT * FROM cart_items ORDER BY added_at DESC"
+            ).fetchall()
 
     result = []
     for row in rows:

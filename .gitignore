@@ -24,6 +24,11 @@ venv/
 env/
 ENV/
 
+# Node & Frontend
+node_modules/
+**/node_modules/
+.vite/
+
 # Environment Variables & Secrets
 .env
 .env.local
@@ -48,5 +53,6 @@ mireye_test_logs/
 
 # Build artifacts
 dist/
+**/dist/
 build/
 *.egg-info/

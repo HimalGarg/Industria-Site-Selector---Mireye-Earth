@@ -24,6 +24,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -122,26 +123,31 @@ def resolve_address(address: str) -> dict[str, Any]:
     """
     client = _get_mireye_client()
 
-    # Use a lightweight field (elevation is always available) to trigger geocoding
-    result = client.fetch_data(fields=["elevation"], locations=[address])
+    # Build candidates: original, deduplicated, and street-level fallback
+    candidates = [address]
+    clean_addr = re.sub(r"\bUSA\b,?", "", address, flags=re.IGNORECASE)
+    parts = [p.strip() for p in clean_addr.split(",") if p.strip()]
+    dedup_parts = list(dict.fromkeys(parts))
+    if len(dedup_parts) < len(parts):
+        candidates.append(", ".join(dedup_parts))
 
-    results_list = result.get("results", [])
-    if not results_list:
-        raise RuntimeError(f"Mireye returned no results for address: {address!r}")
+    # Street-level fallback if house number fails
+    street_fallback = re.sub(r"^\d+\s+", "", dedup_parts[0]) if dedup_parts else ""
+    if street_fallback and street_fallback != dedup_parts[0]:
+        candidates.append(", ".join([street_fallback] + dedup_parts[1:]))
 
-    loc_data = results_list[0]
-    fields_data = loc_data.get("fields_data", {})
+    raw_result = None
+    last_err = None
+    for candidate in candidates:
+        try:
+            raw_result = _raw_fetch(client, candidate, ["elevation"])
+            break
+        except Exception as e:
+            last_err = e
+            continue
 
-    # Pull lat/lng from fields_data → any resolved field carries location
-    # Mireye also puts lat/lng at the top level of the raw response
-    # We re-fetch from the raw response structure via the logger's saved payload
-    # Best approach: the location dict we passed normalizes to {address: ...}
-    # and Mireye's response attaches geocode. We need to dig into the raw response.
-
-    # The MireyeClient.fetch_data() processes the response and puts it in results_list.
-    # But it doesn't expose lat/lng directly — we need to get them from the raw call.
-    # We make a second targeted call to get the geocode block properly.
-    raw_result = _raw_fetch(client, address, ["elevation"])
+    if not raw_result:
+        raise RuntimeError(f"Mireye geocode failed for address {address!r}: {last_err}")
 
     geocode = raw_result.get("geocode", {})
     resolved = raw_result.get("resolved_location", {})
@@ -275,24 +281,25 @@ def fetch_fields_with_cache(
 
     if misses:
         client = _get_mireye_client()
+        # Resolve address to lat/lng location dict for Mireye fetch API
+        loc_target: Any = cache_key
         try:
-            # fetch_data sends one request per location — we use normalized address string
-            result = client.fetch_data(fields=misses, locations=[cache_key])
-            results_list = result.get("results", [])
-            if results_list:
-                fields_data = results_list[0].get("fields_data", {})
-                for field_name in misses:
-                    field_info = fields_data.get(field_name)
-                    # Store the full field object (or None if not returned)
-                    newly_fetched[field_name] = field_info
-                    if field_info is None:
-                        logger.warning("[MIREYE NULL] field=%r for %r — will store as null", field_name, cache_key)
-        except MireyeAPIError as e:
-            logger.error("[MIREYE ERROR] %s — continuing with partial data", e)
-            # Store nulls for all miss fields so we don't re-fetch on next run
-            for f in misses:
-                if f not in newly_fetched:
+            geo = resolve_address(cache_key)
+            loc_target = {"lat": geo["lat"], "lng": geo["lng"]}
+        except Exception as err:
+            logger.warning("[GEOCODE WARN] %s — falling back to raw address string", err)
+
+        for f in misses:
+            try:
+                res = client.fetch_data(fields=[f], locations=[loc_target])
+                results = res.get("results", [])
+                if results:
+                    finfo = results[0].get("fields_data", {}).get(f)
+                    newly_fetched[f] = finfo
+                else:
                     newly_fetched[f] = None
+            except Exception:
+                newly_fetched[f] = None
 
         if newly_fetched:
             if conn is not None:
