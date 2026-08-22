@@ -1,18 +1,24 @@
 """
-backend/main.py — Site Ranker Cart API (v3.2 LLM Normalization Engine)
+backend/main.py — Site Ranker Cart API (v3.3 Evaluation Pipeline)
 
 Endpoints:
-  POST /cart-items   — add a captured site listing to the cart
-  GET  /cart-items   — retrieve cart items for a session
+  POST /cart-items                      — add a captured site listing to the cart
+  GET  /cart-items                      — retrieve cart items for a session
+  POST /evaluate-site                   — start an async site evaluation (5 agents + synthesizer)
+  GET  /evaluate-site/{evaluation_id}   — poll for evaluation results
+  GET  /evaluate-site                   — list evaluations (optionally by cart_item_id)
 
 Data Architecture:
-  - `details` column: 100% raw unaltered scraped key-value pairs preserved for provenance & audit.
+  - `details` column:        100% raw unaltered scraped key-value pairs for provenance & audit.
   - `llm_structured` column: Clean, canonical, typed LLM inference schema (schema_version: "1.0").
+  - `mireye_cache` table:    Additive Mireye field cache keyed by normalized address.
+  - `evaluations` table:     Council evaluation results (5 agents + synthesizer output).
 """
 
 from __future__ import annotations
 
 import json
+import os
 import re
 import sqlite3
 import uuid
@@ -25,10 +31,25 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 # ---------------------------------------------------------------------------
+# Load backend .env (OPENAI_API_KEY, etc.) before anything else
+# ---------------------------------------------------------------------------
+
+_BACKEND_ENV = Path(__file__).parent / ".env"
+if _BACKEND_ENV.exists():
+    with open(_BACKEND_ENV, "r", encoding="utf-8") as _f:
+        for _line in _f:
+            _line = _line.strip()
+            if _line and not _line.startswith("#") and "=" in _line:
+                _k, _v = _line.split("=", 1)
+                _k, _v = _k.strip(), _v.strip().strip("\"'")
+                if _k and not os.environ.get(_k):
+                    os.environ[_k] = _v
+
+# ---------------------------------------------------------------------------
 # App setup
 # ---------------------------------------------------------------------------
 
-app = FastAPI(title="Site Ranker Cart API", version="0.3.2")
+app = FastAPI(title="Site Ranker Cart API", version="0.3.3")
 
 app.add_middleware(
     CORSMiddleware,
@@ -81,10 +102,42 @@ def init_db() -> None:
         if "llm_structured" not in existing_cols:
             conn.execute("ALTER TABLE cart_items ADD COLUMN llm_structured TEXT")
 
+        # ── Evaluation pipeline tables (migration: added in v0.3.3) ───────
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS mireye_cache (
+                cache_key    TEXT PRIMARY KEY,
+                fields       TEXT NOT NULL,
+                last_updated TEXT NOT NULL
+            )
+            """
+        )
+
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS evaluations (
+                evaluation_id    TEXT PRIMARY KEY,
+                cart_item_id     TEXT NOT NULL,
+                overall_score    INTEGER,
+                recommendation   TEXT,
+                conflicts_flagged TEXT,
+                agent_results    TEXT NOT NULL,
+                created_at       TEXT NOT NULL
+            )
+            """
+        )
+
         conn.commit()
 
 
 init_db()
+
+# ---------------------------------------------------------------------------
+# Mount the evaluation pipeline router
+# ---------------------------------------------------------------------------
+
+from evaluate.router import router as evaluate_router  # noqa: E402 (after init_db)
+app.include_router(evaluate_router)
 
 # ---------------------------------------------------------------------------
 # Robust Parsing & Type Normalization Helpers
@@ -445,16 +498,19 @@ def get_cart_items(
 def root() -> dict:
     return {
         "service": "Site Ranker Cart API",
-        "version": "0.3.2",
+        "version": "0.3.3",
         "docs": "/docs",
         "health": "/health",
         "endpoints": {
-            "get_cart_items": "/cart-items?session_id=<your_session_id>",
-            "add_cart_item": "POST /cart-items",
+            "get_cart_items":    "/cart-items?session_id=<your_session_id>",
+            "add_cart_item":     "POST /cart-items",
+            "start_evaluation":  "POST /evaluate-site",
+            "get_evaluation":    "GET  /evaluate-site/{evaluation_id}",
+            "list_evaluations":  "GET  /evaluate-site?cart_item_id=<optional>",
         },
     }
 
 
 @app.get("/health")
 def health() -> dict:
-    return {"status": "ok", "service": "site-ranker-cart", "version": "0.3.2"}
+    return {"status": "ok", "service": "site-ranker-cart", "version": "0.3.3"}

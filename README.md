@@ -9,6 +9,8 @@ A Manifest V3 Chrome Extension (v0.2) and FastAPI Backend Server for multi-site 
 * 📍 **One-Click Listing Capture**: Injects a dark/neon "Add to Site Ranker" button directly onto Crexi and LoopNet property detail pages.
 * 🏗 **Multi-Site Adapter Framework**: Extensible architecture separating website scraping, raw data preservation, common normalization, and LLM output formatting.
 * 🤖 **LLM Normalization Engine**: Automatically cleans asking prices, square footage, cap rates, NOI, occupancy, and lease terms into a typed `schema_version: "1.0"` canonical payload (`llm_structured`).
+* 🏛 **5-Agent Council Evaluation Engine**: Generates grounded site reports across Energy, Water, Surface, Transportation, and Risk disciplines, synthesized with board-ready recommendations.
+* ⚡ **Additive Mireye Location Intelligence Cache**: Caches 58 physical/regulatory datasets per address; eliminates redundant Mireye API calls on repeat runs.
 * 🏷 **Visual Site Badges**: Identifies capture source (`Crexi` or `LoopNet`) in the extension popup with site-specific colors.
 * 🔗 **Session Synchronization**: Auto-syncs session ID between web application `localStorage` and `chrome.storage.local`.
 
@@ -32,9 +34,18 @@ chrome extension/
 │   │   ├── llm-formatter.js
 │   │   └── website-registry.js
 │   └── icons/
-├── backend/            ← FastAPI cart API & LLM normalizer
-│   ├── main.py
-│   ├── test_normalizer.py
+├── backend/            ← FastAPI cart API, LLM normalizer & evaluation engine
+│   ├── evaluate/       ← 5-Agent Site Evaluation Pipeline
+│   │   ├── config.py             (58-field Mireye inventory & agent settings)
+│   │   ├── mireye_fetcher.py     (Mireye client + additive SQLite cache)
+│   │   ├── agents.py             (5 concurrent OpenAI agents)
+│   │   ├── synthesizer.py        (Council synthesizer & conflict flagger)
+│   │   └── router.py             (FastAPI async job endpoints)
+│   ├── main.py                   (FastAPI server v0.3.3)
+│   ├── site_ranker.db            (SQLite database)
+│   ├── test_normalizer.py        (Normalizer unit tests)
+│   ├── test_evaluation_pipeline.py (Evaluation pipeline integration test suite)
+│   ├── .env                      (API keys: OPENAI_API_KEY, MIREYE_API_KEY)
 │   └── requirements.txt
 ├── docs/               ← Multi-site scraping guides & selector docs
 ├── fixtures/           ← HTML test fixtures
@@ -96,6 +107,15 @@ details column                      llm_structured column
 ---
 
 ## API Reference
+
+### `POST /evaluate-site`
+Triggers an asynchronous 5-agent evaluation job for a given `cart_item_id`. Returns `{ "evaluation_id": "...", "status": "processing" }`.
+
+### `GET /evaluate-site/{evaluation_id}`
+Polls for evaluation status and returns full 5-agent council output, citations, overall score, conflicts, and narrative summary when `status` is `"done"`.
+
+### `GET /evaluate-site?cart_item_id=<UUID>`
+Lists all past evaluations stored for a cart item.
 
 ### `POST /cart-items`
 Accepts captured listing data from content scripts, builds the LLM normalization payload, and inserts the record into SQLite.

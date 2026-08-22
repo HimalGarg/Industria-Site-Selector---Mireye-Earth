@@ -11,6 +11,7 @@ desktop.ini
 
 # Python Cache & Bytecode
 __pycache__/
+**/__pycache__/
 *.py[cod]
 *$py.class
 .pytest_cache/
@@ -28,10 +29,11 @@ ENV/
 .env.local
 .env.*
 *.env
+!.env.example
 secrets.json
 credentials.json
 
-# SQLite Databases & Storage
+# SQLite Databases & Local Storage
 *.db
 *.sqlite
 *.sqlite3
@@ -41,11 +43,8 @@ backend/*.db
 *.log
 *.tmp
 temp/
-
-# Development Fixtures, Documentation & Scratch Files
-fixtures/
-scratch/
-docs/
+mireye_test_logs/
+**/mireye_test_logs/
 
 # Build artifacts
 dist/
