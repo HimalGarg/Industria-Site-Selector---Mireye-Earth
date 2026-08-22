@@ -1,0 +1,53 @@
+# Operating System Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE & Editor Settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Python Cache & Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.coverage
+
+# Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+
+# Environment Variables & Secrets
+.env
+.env.local
+.env.*
+*.env
+secrets.json
+credentials.json
+
+# SQLite Databases & Storage
+*.db
+*.sqlite
+*.sqlite3
+backend/*.db
+
+# Log & Temporary Files
+*.log
+*.tmp
+temp/
+
+# Development Fixtures, Documentation & Scratch Files
+fixtures/
+scratch/
+docs/
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
