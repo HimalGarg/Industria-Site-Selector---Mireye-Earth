@@ -28,6 +28,10 @@ ENV/
 node_modules/
 **/node_modules/
 .vite/
+dist/
+**/dist/
+build/
+*.egg-info/
 
 # Environment Variables & Secrets
 .env
@@ -44,10 +48,11 @@ credentials.json
 *.sqlite3
 backend/*.db
 
-# Documentation, Fixtures & Scratch
+# Documentation, Build Guides, Fixtures & Scratch
 docs/
 fixtures/
 scratch/
+*_build_guide.md
 
 # Log & Temporary Files
 *.log
@@ -55,9 +60,3 @@ scratch/
 temp/
 mireye_test_logs/
 **/mireye_test_logs/
-
-# Build artifacts
-dist/
-**/dist/
-build/
-*.egg-info/

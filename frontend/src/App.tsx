@@ -4,25 +4,24 @@ import {
   EvaluationResult,
   fetchCartItems,
   fetchHealth,
-  startEvaluation,
-  pollEvaluation,
-  fetchEvaluationsForCartItem,
+  fetchAllEvaluations,
+  deleteCartItem,
 } from "./api";
+import SiteDetailPage from "./pages/SiteDetailPage";
+import ComparePage from "./pages/ComparePage";
 
 export default function App() {
   const [healthStatus, setHealthStatus] = useState<string>("connecting");
-  const [sessionId, setSessionId] = useState<string>("");
+  const [sessionId, setSessionId] = useState<string>("default-session");
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [evaluationsMap, setEvaluationsMap] = useState<Record<string, EvaluationResult>>({});
   const [loadingCart, setLoadingCart] = useState<boolean>(true);
-  const [activeTab, setActiveTab] = useState<"pipeline" | "evaluations">("pipeline");
   const [selectedFilter, setSelectedFilter] = useState<"all" | "crexi" | "loopnet">("all");
-  
-  // Evaluation Drawer State
-  const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
-  const [activeItem, setActiveItem] = useState<CartItem | null>(null);
-  const [activeEval, setActiveEval] = useState<EvaluationResult | null>(null);
-  const [evaluatingIds, setEvaluatingIds] = useState<Record<string, string>>({}); // cart_item_id -> evaluation_id
   const [rawViewItemIds, setRawViewItemIds] = useState<Record<string, boolean>>({});
+
+  // Client-Side Routing State: "pipeline" | "site" | "compare"
+  const [route, setRoute] = useState<"pipeline" | "site" | "compare">("pipeline");
+  const [activeCartItemId, setActiveCartItemId] = useState<string | null>(null);
 
   // 1. Health check & Initial Data Fetch with Auto-refresh
   useEffect(() => {
@@ -32,7 +31,7 @@ export default function App() {
 
     loadCart(true);
 
-    // Auto-poll cart items every 4s to catch new captures from Chrome Extension
+    // Auto-poll cart items & evaluations every 4s to catch updates
     const interval = setInterval(() => {
       loadCart(false);
     }, 4000);
@@ -43,8 +42,18 @@ export default function App() {
   const loadCart = async (showSpinner = false) => {
     if (showSpinner) setLoadingCart(true);
     try {
-      const items = await fetchCartItems(sessionId);
+      const items = await fetchCartItems();
       setCartItems(items);
+
+      // Fetch all completed evaluations to map status per card
+      const evals = await fetchAllEvaluations();
+      const evalMap: Record<string, EvaluationResult> = {};
+      evals.forEach((ev) => {
+        if (!evalMap[ev.cart_item_id]) {
+          evalMap[ev.cart_item_id] = ev;
+        }
+      });
+      setEvaluationsMap(evalMap);
     } catch (err) {
       console.error(err);
     } finally {
@@ -52,78 +61,44 @@ export default function App() {
     }
   };
 
-  // 2. Trigger Site Evaluation
-  const handleStartEvaluation = async (item: CartItem) => {
-    setActiveItem(item);
-    setDrawerOpen(true);
-    
-    // Check if we already have an evaluation
-    try {
-      const existing = await fetchEvaluationsForCartItem(item.cart_item_id);
-      if (existing.length > 0 && existing[0].status === "done") {
-        setActiveEval(existing[0]);
-        return;
-      }
-    } catch (e) {
-      console.error(e);
-    }
+  // Delete Cart Item Handler
+  const handleDeleteItem = async (e: React.MouseEvent, cartItemId: string) => {
+    e.stopPropagation();
+    if (!confirm("Are you sure you want to delete this property from your pipeline?")) return;
 
-    // Start fresh evaluation
     try {
-      setActiveEval({ evaluation_id: "starting", cart_item_id: item.cart_item_id, status: "processing" });
-      const job = await startEvaluation(item.cart_item_id);
-      setEvaluatingIds((prev) => ({ ...prev, [item.cart_item_id]: job.evaluation_id }));
-
-      // Poll until done
-      pollUntilComplete(job.evaluation_id, item);
-    } catch (err: any) {
-      alert(`Error starting evaluation: ${err.message}`);
-      setActiveEval({
-        evaluation_id: "error",
-        cart_item_id: item.cart_item_id,
-        status: "error",
-        error: err.message,
+      await deleteCartItem(cartItemId);
+      setCartItems((prev) => prev.filter((item) => item.cart_item_id !== cartItemId));
+      setEvaluationsMap((prev) => {
+        const next = { ...prev };
+        delete next[cartItemId];
+        return next;
       });
+      if (activeCartItemId === cartItemId) {
+        setRoute("pipeline");
+        setActiveCartItemId(null);
+      }
+    } catch (err: any) {
+      alert(`Error deleting listing: ${err.message}`);
     }
   };
 
-  // Poll helper
-  const pollUntilComplete = (evalId: string, item: CartItem) => {
-    const interval = setInterval(async () => {
-      try {
-        const res = await pollEvaluation(evalId);
-        if (res.status === "done" || res.status === "error") {
-          clearInterval(interval);
-          setActiveEval(res);
-          setEvaluatingIds((prev) => {
-            const next = { ...prev };
-            delete next[item.cart_item_id];
-            return next;
-          });
-        } else {
-          setActiveEval(res);
-        }
-      } catch (err) {
-        clearInterval(interval);
-      }
-    }, 2500);
+  // Navigation Helper
+  const navigateToSite = (cartItemId: string) => {
+    setActiveCartItemId(cartItemId);
+    setRoute("site");
   };
 
-  const handleOpenDrawer = async (item: CartItem) => {
-    setActiveItem(item);
-    setDrawerOpen(true);
-    setActiveEval(null);
-    try {
-      const existing = await fetchEvaluationsForCartItem(item.cart_item_id);
-      if (existing.length > 0) {
-        setActiveEval(existing[0]);
-      }
-    } catch (err) {
-      console.error(err);
-    }
+  const navigateToCompare = () => {
+    setRoute("compare");
   };
 
-  // Filtered items
+  const navigateToPipeline = () => {
+    setRoute("pipeline");
+    setActiveCartItemId(null);
+  };
+
+  // Filtered items for Pipeline view
   const filteredCartItems = cartItems.filter((item) => {
     if (selectedFilter === "crexi") return item.source_url?.includes("crexi");
     if (selectedFilter === "loopnet") return item.source_url?.includes("loopnet");
@@ -135,7 +110,7 @@ export default function App() {
       {/* ── Left Sidebar Navigation ────────────────────────────────────────── */}
       <aside className="hidden md:flex flex-col w-64 bg-[#0A0E16]/90 backdrop-blur-2xl border-r border-white/5 shadow-[20px_0_40px_rgba(0,0,0,0.4)] fixed inset-y-0 left-0 z-40">
         {/* Brand Header */}
-        <div className="p-6 flex items-center gap-3 border-b border-white/5">
+        <div className="p-6 flex items-center gap-3 border-b border-white/5 cursor-pointer" onClick={navigateToPipeline}>
           <div className="w-8 h-8 rounded-full bg-[#10B981]/20 border border-[#10B981]/40 flex items-center justify-center text-[#4EDEA3] shadow-[0_0_15px_rgba(78,222,163,0.3)]">
             <span className="material-symbols-outlined text-[20px]">radar</span>
           </div>
@@ -157,9 +132,9 @@ export default function App() {
         {/* Navigation Links */}
         <div className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           <button
-            onClick={() => setActiveTab("pipeline")}
+            onClick={navigateToPipeline}
             className={`w-full px-4 py-3 rounded flex items-center gap-3 text-sm font-medium transition-all ${
-              activeTab === "pipeline"
+              route === "pipeline"
                 ? "bg-[#0566D9]/20 text-[#4EDEA3] border-r-4 border-[#4EDEA3]"
                 : "text-[#BBCABF] hover:bg-white/5"
             }`}
@@ -167,6 +142,19 @@ export default function App() {
             <span className="material-symbols-outlined text-[20px]">domain</span>
             <span>Property Pipeline</span>
             <span className="ml-auto bg-[#262A33] text-xs px-2 py-0.5 rounded text-[#4EDEA3] font-mono">{cartItems.length}</span>
+          </button>
+
+          <button
+            onClick={navigateToCompare}
+            className={`w-full px-4 py-3 rounded flex items-center gap-3 text-sm font-medium transition-all ${
+              route === "compare"
+                ? "bg-[#0566D9]/20 text-[#4EDEA3] border-r-4 border-[#4EDEA3]"
+                : "text-[#BBCABF] hover:bg-white/5"
+            }`}
+          >
+            <span className="material-symbols-outlined text-[20px]">compare_arrows</span>
+            <span>Compare Sites</span>
+            <span className="ml-auto bg-[#262A33] text-xs px-2 py-0.5 rounded text-[#4EDEA3] font-mono">Matrix</span>
           </button>
         </div>
 
@@ -186,380 +174,257 @@ export default function App() {
       </aside>
 
       {/* ── Main Content Area ──────────────────────────────────────────────── */}
-      <main className="flex-1 flex flex-col md:ml-64 relative w-full overflow-hidden">
+      <main className="flex-1 flex flex-col md:ml-64 relative w-full overflow-y-auto">
         {/* Top Mobile Header */}
         <header className="md:hidden flex items-center justify-between p-4 border-b border-white/5 glass-panel sticky top-0 z-30">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2" onClick={navigateToPipeline}>
             <span className="material-symbols-outlined text-[#4EDEA3]">radar</span>
             <span className="font-display font-bold text-white text-lg">Site Ranker</span>
           </div>
-          <span className="text-xs px-2 py-1 bg-[#10B981]/20 text-[#4EDEA3] rounded border border-[#10B981]/30">{cartItems.length} Items</span>
+          <div className="flex items-center gap-2">
+            <button onClick={navigateToCompare} className="text-xs px-2.5 py-1 bg-[#0566D9] text-white rounded">
+              Compare
+            </button>
+            <span className="text-xs px-2 py-1 bg-[#10B981]/20 text-[#4EDEA3] rounded border border-[#10B981]/30">{cartItems.length}</span>
+          </div>
         </header>
 
-        {/* Scrollable Canvas */}
-        <div className="flex-1 overflow-y-auto p-6 md:p-10 space-y-8">
-          {/* Header Bar */}
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2 text-xs font-mono text-[#4EDEA3] uppercase tracking-widest mb-1">
-                <span>Obsidian Intelligence System</span>
-                <span>•</span>
-                <span>v0.3.3 API</span>
-              </div>
-              <h1 className="font-display text-3xl md:text-4xl font-bold text-white tracking-tight">Property Pipeline</h1>
-              <p className="text-[#BBCABF] text-sm mt-1">Multi-site commercial real estate listings captured via Chrome Extension.</p>
-            </div>
+        {/* ROUTE 1: Site Detail View (/site/:cartItemId) */}
+        {route === "site" && activeCartItemId && (
+          <SiteDetailPage
+            cartItemId={activeCartItemId}
+            sessionId={sessionId}
+            onBack={navigateToPipeline}
+          />
+        )}
 
-            {/* Filter Pills */}
-            <div className="flex items-center gap-2 bg-[#181C24] p-1 rounded-lg border border-white/5">
-              <button
-                onClick={() => setSelectedFilter("all")}
-                className={`px-3 py-1.5 rounded text-xs font-medium transition-all ${
-                  selectedFilter === "all" ? "bg-[#0566D9] text-white" : "text-[#BBCABF] hover:text-white"
-                }`}
-              >
-                All ({cartItems.length})
-              </button>
-              <button
-                onClick={() => setSelectedFilter("crexi")}
-                className={`px-3 py-1.5 rounded text-xs font-medium transition-all ${
-                  selectedFilter === "crexi" ? "bg-purple-600 text-white" : "text-[#BBCABF] hover:text-white"
-                }`}
-              >
-                Crexi
-              </button>
-              <button
-                onClick={() => setSelectedFilter("loopnet")}
-                className={`px-3 py-1.5 rounded text-xs font-medium transition-all ${
-                  selectedFilter === "loopnet" ? "bg-red-600 text-white" : "text-[#BBCABF] hover:text-white"
-                }`}
-              >
-                LoopNet
-              </button>
-            </div>
-          </div>
+        {/* ROUTE 2: Compare Page (/compare) */}
+        {route === "compare" && (
+          <ComparePage
+            sessionId={sessionId}
+            onBack={navigateToPipeline}
+          />
+        )}
 
-          {/* Loading State */}
-          {loadingCart && (
-            <div className="flex flex-col items-center justify-center py-20 text-[#BBCABF] space-y-3">
-              <div className="w-8 h-8 border-2 border-[#4EDEA3] border-t-transparent rounded-full animate-spin"></div>
-              <p className="text-sm">Loading captured property portfolio...</p>
-            </div>
-          )}
-
-          {/* Empty State */}
-          {!loadingCart && filteredCartItems.length === 0 && (
-            <div className="glass-panel rounded-xl p-12 text-center max-w-xl mx-auto space-y-4">
-              <div className="w-12 h-12 rounded-full bg-[#262A33] text-[#BBCABF] flex items-center justify-center mx-auto">
-                <span className="material-symbols-outlined text-2xl">domain_disabled</span>
-              </div>
-              <h3 className="font-display font-semibold text-lg text-white">No Captured Listings Found</h3>
-              <p className="text-sm text-[#BBCABF]">
-                Use the <span className="text-[#4EDEA3] font-medium">Site Ranker Chrome Extension</span> on Crexi or LoopNet listing detail pages to capture properties into your pipeline!
-              </p>
-            </div>
-          )}
-
-          {/* Bento Property Cards Grid */}
-          {!loadingCart && filteredCartItems.length > 0 && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-              {filteredCartItems.map((item) => {
-                const structured = item.llm_structured || {};
-                const isCrexi = item.source_url?.includes("crexi");
-                const isEvaluating = !!evaluatingIds[item.cart_item_id];
-                const showRaw = !!rawViewItemIds[item.cart_item_id];
-
-                return (
-                  <div
-                    key={item.cart_item_id}
-                    className="glass-panel-interactive rounded-xl overflow-hidden flex flex-col group relative"
-                  >
-                    {/* Source & Status Badges */}
-                    <div className="absolute top-3 left-3 z-10 flex items-center gap-2">
-                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider backdrop-blur-md border ${
-                        isCrexi 
-                          ? "bg-purple-900/60 text-purple-200 border-purple-500/40" 
-                          : "bg-red-900/60 text-red-200 border-red-500/40"
-                      }`}>
-                        {isCrexi ? "Crexi" : "LoopNet"}
-                      </span>
-
-                      {isEvaluating && (
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#10B981]/20 text-[#4EDEA3] border border-[#10B981]/40 animate-pulse flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#4EDEA3] animate-ping"></span>
-                          5-Agent AI Running...
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Image Header */}
-                    <div
-                      className="w-full h-44 bg-cover bg-center relative border-b border-white/5 bg-[#181C24]"
-                      style={{
-                        backgroundImage: item.image_url
-                          ? `url('${item.image_url}')`
-                          : "linear-gradient(to bottom, #1C2028, #0F131C)",
-                      }}
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#151C28] via-transparent to-transparent opacity-90"></div>
-                      {!item.image_url && (
-                        <div className="absolute inset-0 flex items-center justify-center text-white/10">
-                          <span className="material-symbols-outlined text-6xl">apartment</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Card Body */}
-                    <div className="p-5 flex-1 flex flex-col space-y-4">
-                      {/* Title & Location */}
-                      <div>
-                        <h3 className="font-display font-semibold text-lg text-white leading-snug line-clamp-1">
-                          {item.listing_title || item.address}
-                        </h3>
-                        <p className="text-xs text-[#BBCABF] mt-0.5 flex items-center gap-1 truncate">
-                          <span className="material-symbols-outlined text-sm text-[#4EDEA3]">location_on</span>
-                          {item.address}
-                        </p>
-                      </div>
-
-                      {/* Financial Metrics Grid */}
-                      {!showRaw ? (
-                        <div className="grid grid-cols-3 gap-2 py-2.5 px-3 bg-[#0D121C] rounded-lg border border-white/5 text-xs font-mono">
-                          <div>
-                            <div className="text-[10px] text-[#BBCABF] uppercase tracking-wider mb-0.5">Price</div>
-                            <div className="text-white font-medium truncate" title={
-                              structured?.financials?.asking_price_display ||
-                              (structured?.financials?.asking_price ? `$${structured.financials.asking_price.toLocaleString()}` : null) ||
-                              item.details?.["price"] || item.details?.["Asking Price"] || "N/A"
-                            }>
-                              {structured?.financials?.asking_price_display ||
-                               (structured?.financials?.asking_price ? `$${structured.financials.asking_price.toLocaleString()}` : null) ||
-                               (structured?.asking_price ? `$${structured.asking_price.toLocaleString()}` : null) ||
-                               item.details?.["price"] || item.details?.["Asking Price"] || "N/A"}
-                            </div>
-                          </div>
-                          <div>
-                            <div className="text-[10px] text-[#BBCABF] uppercase tracking-wider mb-0.5">Cap Rate</div>
-                            <div className="text-[#4EDEA3] font-medium truncate">
-                              {structured?.financials?.cap_rate_percent !== undefined && structured?.financials?.cap_rate_percent !== null
-                                ? `${structured.financials.cap_rate_percent}%`
-                                : (structured?.cap_rate_pct ? `${structured.cap_rate_pct}%` : (item.details?.["Cap Rate"] || "N/A"))}
-                            </div>
-                          </div>
-                          <div>
-                            <div className="text-[10px] text-[#BBCABF] uppercase tracking-wider mb-0.5">NOI</div>
-                            <div className="text-white font-medium truncate">
-                              {structured?.financials?.noi_annual
-                                ? `$${structured.financials.noi_annual.toLocaleString()}`
-                                : (structured?.noi_annual ? `$${structured.noi_annual.toLocaleString()}` : (item.details?.["NOI"] || "N/A"))}
-                            </div>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="max-h-28 overflow-y-auto p-2 bg-[#0A0E16] rounded border border-white/5 font-mono text-[10px] text-[#BBCABF] space-y-1">
-                          {Object.entries(item.details || {}).map(([k, v]) => (
-                            <div key={k} className="flex justify-between">
-                              <span className="text-white/60 truncate max-w-[120px]">{k}:</span>
-                              <span className="text-white truncate max-w-[140px]">{String(v)}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* View Toggle & Actions */}
-                      <div className="pt-2 border-t border-white/5 flex items-center justify-between gap-2 mt-auto">
-                        <button
-                          onClick={() => setRawViewItemIds((prev) => ({ ...prev, [item.cart_item_id]: !showRaw }))}
-                          className="text-[11px] text-[#BBCABF] hover:text-white transition-colors underline decoration-white/20"
-                        >
-                          {showRaw ? "Show Clean Facts" : "Show Raw Provenance"}
-                        </button>
-
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => handleOpenDrawer(item)}
-                            className="p-2 rounded bg-white/5 text-[#BBCABF] hover:text-white hover:bg-white/10 transition-colors"
-                            title="View Saved Reports"
-                          >
-                            <span className="material-symbols-outlined text-sm">visibility</span>
-                          </button>
-
-                          <button
-                            onClick={() => handleStartEvaluation(item)}
-                            disabled={isEvaluating}
-                            className="px-3 py-2 rounded bg-[#0566D9] hover:bg-[#0566D9]/80 text-white font-medium text-xs flex items-center gap-1.5 transition-all shadow-[0_0_12px_rgba(5,102,217,0.4)] disabled:opacity-50"
-                          >
-                            <span className="material-symbols-outlined text-sm">psychology</span>
-                            <span>{isEvaluating ? "Evaluating..." : "Evaluate Site"}</span>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </main>
-
-      {/* ── Slide-Over 5-Agent Council Evaluation Drawer ───────────────────── */}
-      {drawerOpen && (
-        <div className="fixed inset-0 z-50 flex justify-end">
-          {/* Backdrop Overlay */}
-          <div className="drawer-overlay fixed inset-0" onClick={() => setDrawerOpen(false)}></div>
-
-          {/* Drawer Container */}
-          <div className="relative w-full md:w-[540px] bg-[#151C28] border-l border-white/10 shadow-[ -20px_0_40px_rgba(0,0,0,0.6) ] flex flex-col h-full z-50 overflow-hidden">
-            {/* Header */}
-            <div className="p-6 border-b border-white/5 flex justify-between items-start bg-[#1C2028]">
+        {/* ROUTE 3: Bento Grid Pipeline View (/) */}
+        {route === "pipeline" && (
+          <div className="p-6 md:p-10 space-y-8">
+            {/* Header Bar */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
               <div>
-                <div className="flex items-center gap-2 text-xs font-mono text-[#4EDEA3] uppercase tracking-wider mb-1">
-                  <span className="material-symbols-outlined text-sm">psychology</span>
-                  <span>5-Agent Council Evaluation Report</span>
+                <div className="flex items-center gap-2 text-xs font-mono text-[#4EDEA3] uppercase tracking-widest mb-1">
+                  <span>Obsidian Intelligence System</span>
+                  <span>•</span>
+                  <span>v0.3.5 API</span>
                 </div>
-                <h2 className="font-display text-xl font-bold text-white line-clamp-1">{activeItem?.listing_title || activeItem?.address}</h2>
-                <p className="text-xs text-[#BBCABF] truncate max-w-[400px] mt-0.5">{activeItem?.address}</p>
+                <h1 className="font-display text-3xl md:text-4xl font-bold text-white tracking-tight">Property Pipeline</h1>
+                <p className="text-[#BBCABF] text-sm mt-1">Multi-site commercial real estate listings captured via Chrome Extension.</p>
               </div>
 
-              <button
-                onClick={() => setDrawerOpen(false)}
-                className="p-1.5 rounded-full text-[#BBCABF] hover:text-white hover:bg-white/5 transition-colors"
-              >
-                <span className="material-symbols-outlined text-xl">close</span>
-              </button>
+              {/* Action & Filter Pills */}
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  onClick={navigateToCompare}
+                  className="px-4 py-2 rounded-lg bg-[#0566D9] hover:bg-[#0566D9]/80 text-white font-medium text-xs flex items-center gap-1.5 transition-all shadow-[0_0_12px_rgba(5,102,217,0.4)]"
+                >
+                  <span className="material-symbols-outlined text-base">compare_arrows</span>
+                  <span>Compare Sites</span>
+                </button>
+
+                <div className="flex items-center gap-1 bg-[#181C24] p-1 rounded-lg border border-white/5">
+                  <button
+                    onClick={() => setSelectedFilter("all")}
+                    className={`px-3 py-1.5 rounded text-xs font-medium transition-all ${
+                      selectedFilter === "all" ? "bg-[#0566D9] text-white" : "text-[#BBCABF] hover:text-white"
+                    }`}
+                  >
+                    All ({cartItems.length})
+                  </button>
+                  <button
+                    onClick={() => setSelectedFilter("crexi")}
+                    className={`px-3 py-1.5 rounded text-xs font-medium transition-all ${
+                      selectedFilter === "crexi" ? "bg-purple-600 text-white" : "text-[#BBCABF] hover:text-white"
+                    }`}
+                  >
+                    Crexi
+                  </button>
+                  <button
+                    onClick={() => setSelectedFilter("loopnet")}
+                    className={`px-3 py-1.5 rounded text-xs font-medium transition-all ${
+                      selectedFilter === "loopnet" ? "bg-red-600 text-white" : "text-[#BBCABF] hover:text-white"
+                    }`}
+                  >
+                    LoopNet
+                  </button>
+                </div>
+              </div>
             </div>
 
-            {/* Scrollable Content Body */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
-              {/* Evaluating State */}
-              {(!activeEval || activeEval.status === "processing") && (
-                <div className="p-8 glass-panel rounded-xl text-center space-y-4">
-                  <div className="w-12 h-12 border-4 border-[#4EDEA3] border-t-transparent rounded-full animate-spin mx-auto"></div>
-                  <h3 className="font-display font-semibold text-lg text-white">Running 5-Agent Council Audit</h3>
-                  <p className="text-xs text-[#BBCABF] max-w-sm mx-auto">
-                    Energy, Water, Surface, Transportation, and Risk agents are concurrently fetching Mireye GIS data and analyzing location intelligence...
-                  </p>
+            {/* Loading State */}
+            {loadingCart && (
+              <div className="flex flex-col items-center justify-center py-20 text-[#BBCABF] space-y-3">
+                <div className="w-8 h-8 border-2 border-[#4EDEA3] border-t-transparent rounded-full animate-spin"></div>
+                <p className="text-sm">Loading captured property portfolio...</p>
+              </div>
+            )}
+
+            {/* Empty State */}
+            {!loadingCart && filteredCartItems.length === 0 && (
+              <div className="glass-panel rounded-xl p-12 text-center max-w-xl mx-auto space-y-4">
+                <div className="w-12 h-12 rounded-full bg-[#262A33] text-[#BBCABF] flex items-center justify-center mx-auto">
+                  <span className="material-symbols-outlined text-2xl">domain_disabled</span>
                 </div>
-              )}
+                <h3 className="font-display font-semibold text-lg text-white">No Captured Listings Found</h3>
+                <p className="text-sm text-[#BBCABF]">
+                  Use the <span className="text-[#4EDEA3] font-medium">Site Ranker Chrome Extension</span> on Crexi or LoopNet listing detail pages to capture properties into your pipeline!
+                </p>
+              </div>
+            )}
 
-              {/* Error State */}
-              {activeEval?.status === "error" && (
-                <div className="p-6 bg-red-950/40 border border-red-500/30 rounded-xl space-y-2 text-red-200">
-                  <h3 className="font-semibold text-sm flex items-center gap-2 text-red-400">
-                    <span className="material-symbols-outlined">error</span>
-                    Evaluation Failed
-                  </h3>
-                  <p className="text-xs font-mono">{activeEval.error}</p>
-                </div>
-              )}
+            {/* Bento Property Cards Grid */}
+            {!loadingCart && filteredCartItems.length > 0 && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                {filteredCartItems.map((item) => {
+                  const structured = item.llm_structured || {};
+                  const isCrexi = item.source_url?.includes("crexi");
+                  const showRaw = !!rawViewItemIds[item.cart_item_id];
+                  const existingEval = evaluationsMap[item.cart_item_id];
+                  const isEvaluated = existingEval && existingEval.status === "done";
 
-              {/* Completed Evaluation View */}
-              {activeEval?.status === "done" && (
-                <>
-                  {/* Executive Score & Verdict Banner */}
-                  <div className="p-6 rounded-xl bg-gradient-to-br from-[#10B981]/15 to-transparent border border-[#10B981]/30 flex items-center gap-6">
-                    {/* Score Dial */}
-                    <div className="relative w-24 h-24 flex items-center justify-center shrink-0">
-                      <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                        <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(78, 222, 163, 0.1)" strokeWidth="8" />
-                        <circle
-                          cx="50"
-                          cy="50"
-                          r="42"
-                          fill="none"
-                          stroke="#4EDEA3"
-                          strokeWidth="8"
-                          strokeDasharray="263.8"
-                          strokeDashoffset={263.8 - (263.8 * (activeEval.overall_score || 0)) / 100}
-                          strokeLinecap="round"
-                          className="transition-all duration-1000 ease-out"
-                        />
-                      </svg>
-                      <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <span className="font-display font-bold text-3xl text-[#4EDEA3]">{activeEval.overall_score || 0}</span>
-                        <span className="text-[9px] uppercase tracking-wider text-[#BBCABF]">/ 100</span>
+                  return (
+                    <div
+                      key={item.cart_item_id}
+                      onClick={() => navigateToSite(item.cart_item_id)}
+                      className="glass-panel-interactive rounded-xl overflow-hidden flex flex-col group relative cursor-pointer"
+                    >
+                      {/* Source & Status Badges */}
+                      <div className="absolute top-3 left-3 z-10 flex flex-wrap items-center gap-1.5 max-w-[calc(100%-60px)]">
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider backdrop-blur-md border ${
+                          isCrexi 
+                            ? "bg-purple-900/70 text-purple-200 border-purple-500/50" 
+                            : "bg-red-900/70 text-red-200 border-red-500/50"
+                        }`}>
+                          {isCrexi ? "Crexi" : "LoopNet"}
+                        </span>
+
+                        {isEvaluated && (
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#10B981]/25 text-[#4EDEA3] border border-[#10B981]/60 flex items-center gap-1 backdrop-blur-md shadow-[0_0_10px_rgba(78,222,163,0.3)]">
+                            <span className="material-symbols-outlined text-[12px]">verified</span>
+                            Score: {existingEval.overall_score}/100
+                          </span>
+                        )}
                       </div>
-                    </div>
 
-                    {/* Verdict Message */}
-                    <div className="space-y-1">
-                      <div className="text-[10px] text-[#BBCABF] uppercase tracking-widest font-mono">Executive Board Verdict</div>
-                      <h3 className="font-display text-xl font-bold text-[#4EDEA3]">{activeEval.recommendation}</h3>
-                      <p className="text-xs text-[#BBCABF] leading-relaxed">
-                        Synthesized aggregate score based on physical GIS facts and listing claims.
-                      </p>
-                    </div>
-                  </div>
+                      {/* Delete Icon Button (Top-Right) */}
+                      <button
+                        onClick={(e) => handleDeleteItem(e, item.cart_item_id)}
+                        className="absolute top-3 right-3 z-10 p-1.5 rounded-full bg-[#0F131C]/80 text-[#BBCABF] hover:text-red-400 hover:bg-red-950/80 border border-white/10 backdrop-blur-md transition-all opacity-80 group-hover:opacity-100"
+                        title="Delete Listing"
+                      >
+                        <span className="material-symbols-outlined text-base">delete</span>
+                      </button>
 
-                  {/* Flagged Conflicts Alert Card */}
-                  {activeEval.conflicts_flagged && activeEval.conflicts_flagged.length > 0 && (
-                    <div className="p-4 rounded-xl bg-amber-950/30 border border-amber-500/30 text-amber-200 space-y-2">
-                      <div className="flex items-center gap-2 font-semibold text-xs text-amber-400">
-                        <span className="material-symbols-outlined text-base">warning</span>
-                        <span>Council Disagreements & Listing Contradictions ({activeEval.conflicts_flagged.length})</span>
-                      </div>
-                      <ul className="space-y-1.5 pl-6 list-disc text-xs text-amber-200/90 font-mono">
-                        {activeEval.conflicts_flagged.map((c, i) => (
-                          <li key={i}>{c}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* 5 Agent Discipline Cards */}
-                  <div className="space-y-4">
-                    <h3 className="font-display font-semibold text-sm text-white flex items-center gap-2">
-                      <span className="material-symbols-outlined text-[#4EDEA3]">group_work</span>
-                      <span>Discipline Agent Breakdown (5 Council Members)</span>
-                    </h3>
-
-                    {activeEval.agent_results?.map((agent) => (
-                      <div key={agent.agent_name} className="glass-panel p-4 rounded-xl space-y-3">
-                        <div className="flex items-center justify-between border-b border-white/5 pb-2">
-                          <div className="flex items-center gap-2">
-                            <span className="font-display font-semibold text-sm text-white">{agent.agent_name}</span>
-                            <span className="text-[10px] px-2 py-0.5 rounded bg-white/5 text-[#BBCABF] uppercase font-mono">
-                              {agent.data_availability} data
-                            </span>
-                          </div>
-                          <span className="font-mono font-bold text-sm text-[#4EDEA3]">{agent.score} / 100</span>
-                        </div>
-
-                        <p className="text-xs text-[#DFE2EE] leading-relaxed">{agent.summary}</p>
-                        <p className="text-xs text-[#BBCABF] italic bg-[#0A0E16] p-2.5 rounded border border-white/5">
-                          "{agent.memo}"
-                        </p>
-
-                        {/* Citations Tag Cloud */}
-                        {agent.citations && agent.citations.length > 0 && (
-                          <div className="space-y-1 pt-1">
-                            <div className="text-[10px] text-[#BBCABF] font-mono uppercase tracking-wider">Citations ({agent.citations.length})</div>
-                            <div className="flex flex-wrap gap-1.5">
-                              {agent.citations.map((c, idx) => (
-                                <span
-                                  key={idx}
-                                  className={`text-[10px] px-2 py-0.5 rounded font-mono border ${
-                                    c.source === "mireye"
-                                      ? "bg-[#0566D9]/15 text-blue-300 border-blue-500/30"
-                                      : "bg-purple-950/40 text-purple-300 border-purple-500/30"
-                                  }`}
-                                >
-                                  {c.field}: {String(c.value)}
-                                </span>
-                              ))}
-                            </div>
+                      {/* Image Header */}
+                      <div
+                        className="w-full h-44 bg-cover bg-center relative border-b border-white/5 bg-[#181C24]"
+                        style={{
+                          backgroundImage: item.image_url
+                            ? `url('${item.image_url}')`
+                            : "linear-gradient(to bottom, #1C2028, #0F131C)",
+                        }}
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#151C28] via-transparent to-transparent opacity-90"></div>
+                        {!item.image_url && (
+                          <div className="absolute inset-0 flex items-center justify-center text-white/10">
+                            <span className="material-symbols-outlined text-6xl">apartment</span>
                           </div>
                         )}
                       </div>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
+
+                      {/* Card Body */}
+                      <div className="p-5 flex-1 flex flex-col space-y-4">
+                        {/* Title & Location */}
+                        <div>
+                          <h3 className="font-display font-semibold text-lg text-white leading-snug line-clamp-1 group-hover:text-[#4EDEA3] transition-colors">
+                            {item.listing_title || item.address}
+                          </h3>
+                          <p className="text-xs text-[#BBCABF] mt-0.5 flex items-center gap-1 truncate">
+                            <span className="material-symbols-outlined text-sm text-[#4EDEA3]">location_on</span>
+                            {item.address}
+                          </p>
+                        </div>
+
+                        {/* Financial Metrics Grid */}
+                        {!showRaw ? (
+                          <div className="grid grid-cols-3 gap-2 py-2.5 px-3 bg-[#0D121C] rounded-lg border border-white/5 text-xs font-mono">
+                            <div>
+                              <div className="text-[10px] text-[#BBCABF] uppercase tracking-wider mb-0.5">Price</div>
+                              <div className="text-white font-medium truncate">
+                                {structured?.financials?.asking_price_display ||
+                                 (structured?.financials?.asking_price ? `$${structured.financials.asking_price.toLocaleString()}` : null) ||
+                                 item.details?.["price"] || item.details?.["Asking Price"] || "N/A"}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-[10px] text-[#BBCABF] uppercase tracking-wider mb-0.5">Cap Rate</div>
+                              <div className="text-[#4EDEA3] font-medium truncate">
+                                {structured?.financials?.cap_rate_percent !== undefined && structured?.financials?.cap_rate_percent !== null
+                                  ? `${structured.financials.cap_rate_percent}%`
+                                  : (structured?.cap_rate_pct ? `${structured.cap_rate_pct}%` : (item.details?.["Cap Rate"] || "N/A"))}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-[10px] text-[#BBCABF] uppercase tracking-wider mb-0.5">NOI</div>
+                              <div className="text-white font-medium truncate">
+                                {structured?.financials?.noi_annual
+                                  ? `$${structured.financials.noi_annual.toLocaleString()}`
+                                  : (structured?.noi_annual ? `$${structured.noi_annual.toLocaleString()}` : (item.details?.["NOI"] || "N/A"))}
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="max-h-28 overflow-y-auto p-2 bg-[#0A0E16] rounded border border-white/5 font-mono text-[10px] text-[#BBCABF] space-y-1">
+                            {Object.entries(item.details || {}).map(([k, v]) => (
+                              <div key={k} className="flex justify-between">
+                                <span className="text-white/60 truncate max-w-[120px]">{k}:</span>
+                                <span className="text-white truncate max-w-[140px]">{String(v)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* View Toggle & Actions */}
+                        <div className="pt-2 border-t border-white/5 flex items-center justify-between gap-2 mt-auto">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setRawViewItemIds((prev) => ({ ...prev, [item.cart_item_id]: !showRaw }));
+                            }}
+                            className="text-[11px] text-[#BBCABF] hover:text-white transition-colors underline decoration-white/20"
+                          >
+                            {showRaw ? "Clean Facts" : "Raw Provenance"}
+                          </button>
+
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigateToSite(item.cart_item_id);
+                            }}
+                            className="px-3 py-1.5 rounded bg-[#0566D9] hover:bg-[#0566D9]/80 text-white font-medium text-xs flex items-center gap-1 transition-all shadow-[0_0_10px_rgba(5,102,217,0.3)]"
+                          >
+                            <span>Open Detail & Chat</span>
+                            <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        )}
+      </main>
     </div>
   );
 }

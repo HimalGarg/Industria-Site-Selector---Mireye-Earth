@@ -54,7 +54,7 @@ app = FastAPI(title="Site Ranker Cart API", version="0.3.3")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],          # TODO (deploy): restrict to real domain + extension origin
-    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
@@ -127,6 +127,43 @@ def init_db() -> None:
             """
         )
 
+        # ── Chat & Memory pipeline tables (migration: added in v0.3.5) ──────
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS listing_memory (
+                memory_id    TEXT PRIMARY KEY,
+                cart_item_id TEXT NOT NULL,
+                session_id   TEXT NOT NULL,
+                fact         TEXT NOT NULL,
+                created_at   TEXT NOT NULL
+            )
+            """
+        )
+
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS session_context (
+                session_id TEXT PRIMARY KEY,
+                summary    TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+            """
+        )
+
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS chat_messages (
+                message_id   TEXT PRIMARY KEY,
+                cart_item_id TEXT NOT NULL,
+                session_id   TEXT NOT NULL,
+                role         TEXT NOT NULL,
+                content      TEXT NOT NULL,
+                citations    TEXT,
+                created_at   TEXT NOT NULL
+            )
+            """
+        )
+
         conn.commit()
 
 
@@ -136,8 +173,12 @@ init_db()
 # Mount the evaluation pipeline router
 # ---------------------------------------------------------------------------
 
-from evaluate.router import router as evaluate_router  # noqa: E402 (after init_db)
+from evaluate.router import router as evaluate_router          # noqa: E402 (after init_db)
+from evaluate.compare_router import router as compare_router  # noqa: E402 (after init_db)
+from chat.router import router as chat_router                  # noqa: E402 (after init_db)
 app.include_router(evaluate_router)
+app.include_router(compare_router)
+app.include_router(chat_router)
 
 # ---------------------------------------------------------------------------
 # Robust Parsing & Type Normalization Helpers
@@ -390,13 +431,12 @@ class CartItemFull(BaseModel):
 
 @app.post("/cart-items", response_model=CartItemOut, status_code=201)
 def add_cart_item(item: CartItemIn) -> CartItemOut:
-    """Add a captured address/listing to the cart for a given session."""
+    """Add or update a captured listing in the cart (prevents duplicate listings)."""
     if not item.session_id.strip():
         raise HTTPException(status_code=400, detail="session_id is required")
     if not item.address.strip():
         raise HTTPException(status_code=400, detail="address is required")
 
-    cart_item_id = str(uuid.uuid4())
     added_at = datetime.now(timezone.utc).isoformat()
 
     # Build standardized canonical LLM schema (schema_version: "1.0")
@@ -412,6 +452,43 @@ def add_cart_item(item: CartItemIn) -> CartItemOut:
     llm_structured_json = json.dumps(llm_structured_obj)
 
     with get_db() as conn:
+        # Prevent duplicate entries for the same session and URL or address
+        existing = None
+        if item.source_url and item.source_url.strip():
+            existing = conn.execute(
+                "SELECT cart_item_id FROM cart_items WHERE session_id = ? AND source_url = ?",
+                (item.session_id.strip(), item.source_url.strip()),
+            ).fetchone()
+
+        if not existing:
+            existing = conn.execute(
+                "SELECT cart_item_id FROM cart_items WHERE session_id = ? AND LOWER(address) = LOWER(?)",
+                (item.session_id.strip(), item.address.strip()),
+            ).fetchone()
+
+        if existing:
+            cart_item_id = existing["cart_item_id"]
+            conn.execute(
+                """
+                UPDATE cart_items
+                SET address = ?, source_url = ?, listing_title = ?, image_url = ?, details = ?, llm_structured = ?, added_at = ?
+                WHERE cart_item_id = ?
+                """,
+                (
+                    item.address.strip(),
+                    item.source_url,
+                    item.listing_title,
+                    item.image_url,
+                    details_json,
+                    llm_structured_json,
+                    added_at,
+                    cart_item_id,
+                ),
+            )
+            conn.commit()
+            return CartItemOut(cart_item_id=cart_item_id, address=item.address.strip(), status="updated")
+
+        cart_item_id = str(uuid.uuid4())
         conn.execute(
             """
             INSERT INTO cart_items
@@ -432,7 +509,22 @@ def add_cart_item(item: CartItemIn) -> CartItemOut:
         )
         conn.commit()
 
-    return CartItemOut(cart_item_id=cart_item_id, address=item.address.strip())
+    return CartItemOut(cart_item_id=cart_item_id, address=item.address.strip(), status="added")
+
+
+@app.delete("/cart-items/{cart_item_id}")
+def delete_cart_item(cart_item_id: str) -> dict:
+    """Delete a cart item and any associated evaluations, memory, and chat messages."""
+    cart_item_id = cart_item_id.strip()
+    with get_db() as conn:
+        conn.execute("DELETE FROM evaluations WHERE cart_item_id = ?", (cart_item_id,))
+        conn.execute("DELETE FROM chat_messages WHERE cart_item_id = ?", (cart_item_id,))
+        conn.execute("DELETE FROM listing_memory WHERE cart_item_id = ?", (cart_item_id,))
+        cursor = conn.execute("DELETE FROM cart_items WHERE cart_item_id = ?", (cart_item_id,))
+        conn.commit()
+        if cursor.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Cart item not found")
+    return {"status": "deleted", "cart_item_id": cart_item_id}
 
 
 @app.get("/cart-items", response_model=list[CartItemFull])
