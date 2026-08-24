@@ -41,8 +41,6 @@ build/
 !.env.example
 secrets.json
 credentials.json
-*.docx
-test_result.json
 
 # SQLite Databases & Local Storage
 *.db
@@ -50,9 +48,11 @@ test_result.json
 *.sqlite3
 backend/*.db
 
-# Fixtures & Scratch
+# Documentation, Build Guides, Fixtures & Scratch
+docs/
 fixtures/
 scratch/
+*_build_guide.md
 
 # Log & Temporary Files
 *.log
