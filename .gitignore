@@ -48,11 +48,9 @@ credentials.json
 *.sqlite3
 backend/*.db
 
-# Documentation, Build Guides, Fixtures & Scratch
-docs/
+# Fixtures & Scratch
 fixtures/
 scratch/
-*_build_guide.md
 
 # Log & Temporary Files
 *.log
