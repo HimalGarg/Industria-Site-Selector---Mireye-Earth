@@ -1,6 +1,62 @@
-.env
+# Operating System Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE & Editor Settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Python Cache & Bytecode
 __pycache__/
-*.pyc
-*.md
+**/__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.coverage
+
+# Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+
+# Node & Frontend
+node_modules/
+**/node_modules/
+.vite/
+dist/
+**/dist/
+build/
+*.egg-info/
+
+# Environment Variables & Secrets
+.env
+.env.local
+.env.*
+*.env
+!.env.example
+secrets.json
+credentials.json
 *.docx
 test_result.json
+
+# SQLite Databases & Local Storage
+*.db
+*.sqlite
+*.sqlite3
+backend/*.db
+
+# Fixtures & Scratch
+fixtures/
+scratch/
+
+# Log & Temporary Files
+*.log
+*.tmp
+temp/
+mireye_test_logs/
+**/mireye_test_logs/

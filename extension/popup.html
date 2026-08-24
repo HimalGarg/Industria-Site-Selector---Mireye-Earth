@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Site Ranker Capture</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Reset & Base ─────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #0B0F17;
+      --surface:    #151C28;
+      --surface-2:  #1C2028;
+      --border:     rgba(255,255,255,0.08);
+      --accent:     #4EDEA3;
+      --accent-dim: rgba(78,222,163,0.12);
+      --accent-glow:rgba(78,222,163,0.3);
+      --text:       #DFE2EE;
+      --text-muted: #6B7280;
+      --text-dim:   #BBCABF;
+      --danger:     #FFB4AB;
+      --success:    #4EDEA3;
+      --radius:     8px;
+      --radius-sm:  4px;
+      --transition: 180ms ease;
+    }
+
+    body {
+      width: 360px;
+      min-height: 200px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 13px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Shell ────────────────────────────────────────────────────────── */
+    .shell {
+      display: flex;
+      flex-direction: column;
+      min-height: 200px;
+    }
+
+    /* ── Header ───────────────────────────────────────────────────────── */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px 12px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(135deg, #141720 0%, #0f1a1e 100%);
+    }
+    .header-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      flex-shrink: 0;
+      filter: drop-shadow(0 0 6px var(--accent-glow));
+    }
+    .header-title {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      color: var(--text);
+    }
+    .header-subtitle {
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .header-badge {
+      margin-left: auto;
+      background: var(--accent-dim);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      border-radius: 99px;
+    }
+
+    /* ── Body ─────────────────────────────────────────────────────────── */
+    .body { padding: 16px; flex: 1; }
+
+    /* ── Connect state ────────────────────────────────────────────────── */
+    #view-connect { display: none; text-align: center; }
+    #view-connect.active { display: block; }
+
+    .connect-icon {
+      width: 52px;
+      height: 52px;
+      margin: 8px auto 14px;
+      border-radius: 14px;
+      background: var(--accent-dim);
+      border: 1px solid rgba(0,212,180,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .connect-icon svg { width: 26px; height: 26px; }
+    .connect-heading {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+    .connect-desc {
+      font-size: 12px;
+      color: var(--text-dim);
+      line-height: 1.6;
+      margin-bottom: 20px;
+      max-width: 260px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* ── Capture state ────────────────────────────────────────────────── */
+    #view-capture { display: none; }
+    #view-capture.active { display: block; }
+
+    .section-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    /* ── Input ────────────────────────────────────────────────────────── */
+    .input-wrap {
+      position: relative;
+      margin-bottom: 10px;
+    }
+    .address-input {
+      width: 100%;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 13px;
+      padding: 9px 36px 9px 10px;
+      resize: none;
+      outline: none;
+      transition: border-color var(--transition), box-shadow var(--transition);
+      min-height: 68px;
+      line-height: 1.5;
+    }
+    .address-input::placeholder { color: var(--text-muted); }
+    .address-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-dim);
+    }
+    .clear-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-muted);
+      padding: 2px;
+      border-radius: 4px;
+      transition: color var(--transition), background var(--transition);
+      display: none;
+    }
+    .clear-btn.visible { display: flex; align-items: center; justify-content: center; }
+    .clear-btn:hover { color: var(--text); background: rgba(255,255,255,0.07); }
+    .clear-btn svg { width: 14px; height: 14px; }
+
+    /* ── Source URL ───────────────────────────────────────────────────── */
+    .source-url-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 12px;
+      padding: 6px 8px;
+      background: var(--surface-2);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+    }
+    .source-url-row svg { flex-shrink: 0; color: var(--text-muted); width: 12px; height: 12px; }
+    .source-url-text {
+      font-size: 11px;
+      color: var(--text-muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+    }
+
+    /* ── Status ───────────────────────────────────────────────────────── */
+    #status-line {
+      font-size: 11px;
+      min-height: 18px;
+      margin-bottom: 8px;
+      padding: 0 2px;
+      transition: opacity var(--transition);
+      color: var(--text-dim);
+    }
+    #status-line.error   { color: var(--danger); }
+    #status-line.success { color: var(--success); }
+
+    /* ── Buttons ──────────────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform var(--transition), box-shadow var(--transition), opacity var(--transition), background var(--transition);
+      text-decoration: none;
+    }
+    .btn:active { transform: scale(0.97); }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #0566D9, #10B981);
+      color: #FFFFFF;
+      padding: 10px 0;
+      width: 100%;
+      box-shadow: 0 4px 15px rgba(78,222,163,0.3);
+    }
+    .btn-primary:hover { box-shadow: 0 6px 22px rgba(78,222,163,0.5); }
+    .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; transform: none; }
+
+    .btn-connect {
+      background: linear-gradient(135deg, #0566D9, #10B981);
+      color: #FFFFFF;
+      padding: 11px 28px;
+      font-size: 14px;
+      box-shadow: 0 4px 16px rgba(78,222,163,0.35);
+    }
+    .btn-connect:hover { box-shadow: 0 5px 24px rgba(0,212,180,0.5); }
+
+    .btn svg { width: 15px; height: 15px; }
+
+    /* ── Spinner ──────────────────────────────────────────────────────── */
+    .spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(0,26,23,0.4);
+      border-top-color: #001a17;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Divider ──────────────────────────────────────────────────────── */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 14px 0;
+    }
+
+    /* ── Recent items ─────────────────────────────────────────────────── */
+    .recent-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .recent-count {
+      font-size: 10px;
+      color: var(--text-muted);
+      background: var(--surface-2);
+      padding: 2px 7px;
+      border-radius: 99px;
+      border: 1px solid var(--border);
+    }
+
+    #recent-list { display: flex; flex-direction: column; gap: 5px; }
+
+    .item-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 9px 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      transition: border-color var(--transition), background var(--transition);
+      animation: slideIn 0.2s ease both;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .item-card:hover { border-color: rgba(0,212,180,0.25); background: var(--surface-2); }
+
+    .item-thumb {
+      width: 42px;
+      height: 42px;
+      border-radius: 6px;
+      object-fit: cover;
+      flex-shrink: 0;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+    }
+    .item-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+      margin-top: 5px;
+      box-shadow: 0 0 6px var(--accent-glow);
+    }
+    .item-content { flex: 1; min-width: 0; }
+    .item-address {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 1px;
+    }
+    .item-sub {
+      font-size: 10px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 2px;
+      min-height: 0;
+    }
+    .item-meta {
+      font-size: 10px;
+      color: var(--text-muted);
+      display: flex;
+      gap: 8px;
+    }
+    .item-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin: 3px 0;
+    }
+    .item-tag {
+      font-size: 9px;
+      font-weight: 600;
+      padding: 1px 5px;
+      border-radius: 4px;
+      background: rgba(0,212,180,0.1);
+      color: #00d4b4;
+      border: 1px solid rgba(0,212,180,0.2);
+    }
+    .item-source {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 140px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 18px 0 6px;
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+    .empty-state svg {
+      width: 28px;
+      height: 28px;
+      margin-bottom: 8px;
+      opacity: 0.3;
+    }
+
+    /* ── Site badges ──────────────────────────────────────────────────── */
+    .source-site-badge,
+    .item-site-badge {
+      display: inline-block;
+      font-size: 8px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 1px 5px;
+      border-radius: 3px;
+      color: #fff;
+      vertical-align: middle;
+    }
+    .source-site-badge {
+      margin-right: 4px;
+    }
+    .item-site-badge {
+      font-size: 8px;
+      padding: 1px 4px;
+    }
+
+    /* ── Session footer ───────────────────────────────────────────────── */
+    .session-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 16px;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .session-id-text {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-family: 'Courier New', monospace;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 220px;
+    }
+    .disconnect-btn {
+      font-size: 10px;
+      color: var(--text-muted);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 3px 6px;
+      border-radius: 4px;
+      transition: color var(--transition), background var(--transition);
+      font-family: inherit;
+    }
+    .disconnect-btn:hover { color: var(--danger); background: rgba(248,113,113,0.1); }
+
+    /* Loading state */
+    #loading-overlay {
+      display: none;
+      padding: 24px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+    #loading-overlay.active { display: block; }
+    .loading-spinner {
+      width: 22px;
+      height: 22px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 0 auto 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <!-- Header -->
+    <div class="header">
+      <img class="header-icon" src="icons/icon48.png" alt="Site Ranker" />
+      <div>
+        <div class="header-title">Site Ranker</div>
+        <div class="header-subtitle">Capture</div>
+      </div>
+      <span class="header-badge">v0.2</span>
+    </div>
+
+    <!-- Loading overlay -->
+    <div id="loading-overlay" class="active">
+      <div class="loading-spinner"></div>
+      <div>Loading…</div>
+    </div>
+
+    <!-- Body -->
+    <div class="body" id="main-body" style="display:none;">
+
+      <!-- ── Connect view ─────────────────────────────────────────────── -->
+      <div id="view-connect">
+        <div class="connect-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#00d4b4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+          </svg>
+        </div>
+        <div class="connect-heading">Connect Your Session</div>
+        <div class="connect-desc">
+          Open the Site Ranker website to link your cart. Addresses you capture will be added there automatically.
+        </div>
+        <button class="btn btn-connect" id="btn-connect">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 3 21 3 21 9"/>
+            <line x1="10" y1="14" x2="21" y2="3"/>
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+          </svg>
+          Open Site Ranker
+        </button>
+      </div>
+
+      <!-- ── Capture view ─────────────────────────────────────────────── -->
+      <div id="view-capture">
+        <!-- Address input -->
+        <div class="section-label">Site Address</div>
+        <div class="input-wrap">
+          <textarea
+            id="address-input"
+            class="address-input"
+            placeholder="Highlight an address on a listing page, or type it here…"
+            rows="3"
+            spellcheck="false"
+          ></textarea>
+          <button class="clear-btn" id="clear-input" title="Clear" aria-label="Clear address">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Source URL row -->
+        <div class="source-url-row" id="source-url-row">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+          </svg>
+          <span class="source-url-text" id="source-url-display">—</span>
+        </div>
+
+        <!-- Status -->
+        <div id="status-line"></div>
+
+        <!-- Submit -->
+        <button class="btn btn-primary" id="btn-submit">
+          <span id="submit-label">Add to Cart</span>
+          <div class="spinner" id="submit-spinner"></div>
+          <svg id="submit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
+          </svg>
+        </button>
+
+        <!-- Divider -->
+        <div class="divider"></div>
+
+        <!-- Recent items -->
+        <div class="recent-header">
+          <div class="section-label" style="margin:0;">Recent Captures</div>
+          <span class="recent-count" id="recent-count">—</span>
+        </div>
+        <div id="recent-list"></div>
+      </div>
+
+    </div><!-- /body -->
+
+    <!-- Session footer (shown only when connected) -->
+    <div class="session-footer" id="session-footer" style="display:none;">
+      <span class="session-id-text" id="session-id-display"></span>
+      <button class="disconnect-btn" id="btn-disconnect">Disconnect</button>
+    </div>
+
+  </div><!-- /shell -->
+
+  <script src="popup.js"></script>
+</body>
+</html>
