@@ -151,6 +151,8 @@ MIREYE_BASE_URL=https://api.mireye.earth
 
 ## 🚀 Quick Start & Setup Guide
 
+> **Note:** For a comprehensive, step-by-step setup and build guide for production and development, please see [BUILD.md](BUILD.md).
+
 ### 1. Launch FastAPI Backend Server
 
 ```bash
