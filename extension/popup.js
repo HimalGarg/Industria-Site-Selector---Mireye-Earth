@@ -431,7 +431,8 @@ async function loadRecentItems(sessionId) {
       `${API_BASE}/cart-items?session_id=${encodeURIComponent(sessionId)}`
     );
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const items = await res.json();
+    const allItems = await res.json();
+    const items = allItems.filter(i => !i.is_radius_recommendation);
     renderRecentItems(items.slice(0, MAX_RECENT));
   } catch {
     // Silent — not critical; don't overwrite the submit status message

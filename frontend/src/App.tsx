@@ -113,6 +113,8 @@ export default function App() {
     return true;
   });
 
+  const pipelineItemsCount = cartItems.filter(i => !(i as any).is_radius_recommendation).length;
+
   return (
     <div className="flex h-screen overflow-hidden bg-[#0B0F17] text-[#DFE2EE] font-body">
       {/* ── Left Sidebar Navigation ────────────────────────────────────────── */}
@@ -149,7 +151,7 @@ export default function App() {
           >
             <span className="material-symbols-outlined text-[20px]">domain</span>
             <span>Property Pipeline</span>
-            <span className="ml-auto bg-[#262A33] text-xs px-2 py-0.5 rounded text-[#4EDEA3] font-mono">{cartItems.length}</span>
+            <span className="ml-auto bg-[#262A33] text-xs px-2 py-0.5 rounded text-[#4EDEA3] font-mono">{pipelineItemsCount}</span>
           </button>
 
           <button
@@ -206,7 +208,7 @@ export default function App() {
             <button onClick={navigateToCompare} className="text-xs px-2.5 py-1 bg-[#0566D9] text-white rounded">
               Compare
             </button>
-            <span className="text-xs px-2 py-1 bg-[#10B981]/20 text-[#4EDEA3] rounded border border-[#10B981]/30">{cartItems.length}</span>
+            <span className="text-xs px-2 py-1 bg-[#10B981]/20 text-[#4EDEA3] rounded border border-[#10B981]/30">{pipelineItemsCount}</span>
           </div>
         </header>
 
@@ -272,7 +274,7 @@ export default function App() {
                       selectedFilter === "all" ? "bg-[#0566D9] text-white" : "text-[#BBCABF] hover:text-white"
                     }`}
                   >
-                    All ({cartItems.length})
+                    All ({pipelineItemsCount})
                   </button>
                   <button
                     onClick={() => setSelectedFilter("crexi")}
