@@ -54,7 +54,7 @@ AGENT_FIELD_MAP: dict[str, list[str]] = {
         "huc12_watershed",
     ],
     "surface": [
-        "elevation_m",            # NOTE: Mireye returns this as "elevation" (unit=meters) — mapped in fetcher
+        "elevation",            # NOTE: Mireye returns this as "elevation" (unit=meters) — mapped in fetcher
         "slope_degrees",
         "aspect_direction",
         "soil_drainage_class",
