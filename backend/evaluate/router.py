@@ -75,6 +75,7 @@ _job_store_lock = threading.Lock()
 
 class EvaluateSiteRequest(BaseModel):
     cart_item_id: str
+    user_requirements: Optional[str] = None
 
 
 class EvaluateSiteStarted(BaseModel):
@@ -95,6 +96,8 @@ def start_evaluation(body: EvaluateSiteRequest, conn_factory=None) -> EvaluateSi
     Poll GET /evaluate-site/{evaluation_id} for results.
     """
     cart_item_id = body.cart_item_id.strip()
+    user_requirements = body.user_requirements
+
     if not cart_item_id:
         raise HTTPException(status_code=400, detail="cart_item_id is required")
 
@@ -121,17 +124,17 @@ def start_evaluation(body: EvaluateSiteRequest, conn_factory=None) -> EvaluateSi
     evaluation_id = str(uuid.uuid4())
 
     with _job_store_lock:
-        _job_store[evaluation_id] = {"status": "processing", "result": None, "error": None}
+        _job_store[evaluation_id] = {"status": "processing", "result": None, "error": None, "cart_item_id": cart_item_id}
 
     # Start the pipeline in a background thread
     thread = threading.Thread(
         target=_run_pipeline_sync,
-        args=(evaluation_id, cart_item_id, address, llm_structured),
+        args=(evaluation_id, cart_item_id, address, llm_structured, user_requirements),
         daemon=True,
     )
     thread.start()
 
-    logger.info("[PIPELINE START] evaluation_id=%s cart_item_id=%s address=%r", evaluation_id, cart_item_id, address)
+    logger.info("[PIPELINE START] evaluation_id=%s cart_item_id=%s address=%r user_reqs=%r", evaluation_id, cart_item_id, address, bool(user_requirements))
     return EvaluateSiteStarted(evaluation_id=evaluation_id)
 
 
@@ -211,6 +214,7 @@ def _run_pipeline_sync(
     cart_item_id: str,
     address: str,
     llm_structured: dict[str, Any],
+    user_requirements: Optional[str] = None,
 ) -> None:
     """
     Full synchronous evaluation pipeline. Runs in a background daemon thread.
@@ -218,7 +222,7 @@ def _run_pipeline_sync(
     """
     try:
         # Run the async pipeline on a fresh event loop for this thread
-        result = asyncio.run(_run_pipeline_async(evaluation_id, cart_item_id, address, llm_structured))
+        result = asyncio.run(_run_pipeline_async(evaluation_id, cart_item_id, address, llm_structured, user_requirements))
 
         with _job_store_lock:
             _job_store[evaluation_id] = {"status": "done", "result": result, "error": None}
@@ -239,6 +243,7 @@ async def _run_pipeline_async(
     cart_item_id: str,
     address: str,
     llm_structured: dict[str, Any],
+    user_requirements: Optional[str] = None,
 ) -> dict[str, Any]:
     """
     The full async evaluation pipeline:
@@ -313,12 +318,13 @@ async def _run_pipeline_async(
         llm_structured=llm_structured,
         agent_field_map=AGENT_FIELD_MAP,
         proximity_results=proximity_results,
+        user_requirements=user_requirements,
     )
     logger.info("[STEP 5 DONE] agent scores: %s", [r.get("score") for r in agent_results])
 
     # ── Step 6: Synthesizer ────────────────────────────────────────────
     logger.info("[STEP 6] Running synthesizer")
-    synth = await loop.run_in_executor(None, run_synthesizer, agent_results)
+    synth = await loop.run_in_executor(None, run_synthesizer, agent_results, user_requirements)
     logger.info("[STEP 6 DONE] overall_score=%d conflicts=%d", synth["overall_score"], len(synth["conflicts_flagged"]))
 
     # ── Step 7: Persist to DB ─────────────────────────────────────────

@@ -92,14 +92,45 @@ def post_chat_message(body: ChatRequest) -> ChatResponse:
         address = cart_row["address"]
         llm_structured = json.loads(cart_row["llm_structured"]) if cart_row["llm_structured"] else {}
 
-        # Step 2: Check for existing evaluation report
+        # Step 2: Check if an evaluation is currently running in memory
+        from evaluate.router import _job_store, _job_store_lock
+        
+        is_processing = False
+        with _job_store_lock:
+            for job in _job_store.values():
+                if job.get("status") == "processing" and job.get("cart_item_id") == cart_item_id:
+                    is_processing = True
+                    break
+
+        if is_processing:
+            prompt_content = (
+                "I've received your requirements! The 5-Agent Council is currently running the evaluation audit. "
+                "Once it finishes, I'll use your requirements and the GIS data to answer any questions you have."
+            )
+            assistant_msg_id = str(uuid.uuid4())
+            user_msg_id = str(uuid.uuid4())
+            now_iso = datetime.now(timezone.utc).isoformat()
+
+            conn.execute(
+                "INSERT INTO chat_messages (message_id, cart_item_id, session_id, role, content, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+                (user_msg_id, cart_item_id, session_id, "user", user_message, now_iso),
+            )
+            conn.execute(
+                "INSERT INTO chat_messages (message_id, cart_item_id, session_id, role, content, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+                (assistant_msg_id, cart_item_id, session_id, "assistant", prompt_content, now_iso),
+            )
+            conn.commit()
+
+            trigger_memory_extraction_background(cart_item_id=cart_item_id, session_id=session_id, user_message=user_message, assistant_content=prompt_content)
+            return ChatResponse(message_id=assistant_msg_id, content=prompt_content, citations=[])
+
+        # Step 3: Check for existing evaluation report
         eval_row = conn.execute(
             "SELECT overall_score, recommendation, conflicts_flagged, agent_results FROM evaluations WHERE cart_item_id = ? ORDER BY created_at DESC LIMIT 1",
             (cart_item_id,),
         ).fetchone()
 
         if not eval_row:
-            # User hasn't run an evaluation report yet
             prompt_content = (
                 "This site has not been evaluated by the 5-Agent Council yet. "
                 "Please run an **Evaluate Site** audit first so I can ground our conversation in physical GIS data and council analyses!"
@@ -118,6 +149,7 @@ def post_chat_message(body: ChatRequest) -> ChatResponse:
             )
             conn.commit()
 
+            trigger_memory_extraction_background(cart_item_id=cart_item_id, session_id=session_id, user_message=user_message, assistant_content=prompt_content)
             return ChatResponse(message_id=assistant_msg_id, content=prompt_content, citations=[])
 
         latest_evaluation = {
