@@ -57,7 +57,16 @@ export default function RadiusRecommendations({ parentCartItemId }: RadiusRecomm
   }
 
   if (comparables.length === 0) {
-    return null;
+    return (
+      <div className="bg-[#151C28] rounded-xl border border-white/5 p-10 text-center">
+        <span className="material-symbols-outlined text-4xl text-[#BBCABF]/30 mb-4">radar</span>
+        <h3 className="font-display font-bold text-xl text-white mb-2">No Recommendations Yet</h3>
+        <p className="text-[#BBCABF] max-w-sm mx-auto">
+          We haven't found any similar properties within a 2km radius. 
+          Use the extension popup to run a "Scan 2km Radius" to generate rule-based comparables.
+        </p>
+      </div>
+    );
   }
 
   return (

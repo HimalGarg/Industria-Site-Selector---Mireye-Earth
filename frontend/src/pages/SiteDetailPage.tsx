@@ -18,6 +18,8 @@ import {
 
 import RadiusRecommendations from "../components/RadiusRecommendations";
 
+import { RequirementModal } from "../components/RequirementModal";
+
 interface SiteDetailPageProps {
   cartItemId: string;
   sessionId: string;
@@ -42,6 +44,9 @@ export default function SiteDetailPage({ cartItemId, sessionId, onBack }: SiteDe
   const [sendingChat, setSendingChat] = useState<boolean>(false);
   const [memories, setMemories] = useState<ListingMemory[]>([]);
   const [loadingMemory, setLoadingMemory] = useState<boolean>(false);
+
+  // Requirement Modal State
+  const [showReqModal, setShowReqModal] = useState<boolean>(false);
 
   // Load Item, Evaluation, Chat History, and Memory Facts on mount
   useEffect(() => {
@@ -106,12 +111,24 @@ export default function SiteDetailPage({ cartItemId, sessionId, onBack }: SiteDe
     }
   };
 
+  // Click handler to open the modal
+  const handleStartEvaluationClick = () => {
+    setShowReqModal(true);
+  };
+
   // Start / Regenerate 5-Agent Evaluation
-  const handleStartEvaluation = async () => {
+  const handleConfirmEvaluation = async (requirements: string) => {
+    setShowReqModal(false);
+    
+    // Push the requirements into the chat history so it gets extracted into the Listing Notes & Memory
+    if (requirements.trim()) {
+      handleSendChat(`My evaluation requirements: ${requirements.trim()}`);
+    }
+
     setEvaluating(true);
     try {
       setEvaluation({ evaluation_id: "starting", cart_item_id: cartItemId, status: "processing" });
-      const job = await startEvaluation(cartItemId);
+      const job = await startEvaluation(cartItemId, requirements || undefined);
 
       // Poll until done
       const interval = setInterval(async () => {
@@ -266,7 +283,7 @@ export default function SiteDetailPage({ cartItemId, sessionId, onBack }: SiteDe
               <div>
                 <div className="text-xs font-bold text-white">{evaluation.recommendation}</div>
                 <button
-                  onClick={handleStartEvaluation}
+                  onClick={handleStartEvaluationClick}
                   disabled={evaluating}
                   className="mt-1 text-[11px] text-[#4EDEA3] hover:underline flex items-center gap-1"
                 >
@@ -279,7 +296,7 @@ export default function SiteDetailPage({ cartItemId, sessionId, onBack }: SiteDe
 
           {(!evaluation || evaluation.status !== "done") && (
             <button
-              onClick={handleStartEvaluation}
+              onClick={handleStartEvaluationClick}
               disabled={evaluating}
               className="px-4 py-2.5 bg-[#0566D9] hover:bg-[#0566D9]/80 text-white font-medium text-xs rounded-lg flex items-center gap-2 shadow-[0_0_15px_rgba(5,102,217,0.4)] disabled:opacity-50"
             >
@@ -308,9 +325,6 @@ export default function SiteDetailPage({ cartItemId, sessionId, onBack }: SiteDe
         )}
       </div>
 
-      {/* ── Radius Recommendations ─────────────────────────────────────────── */}
-      <RadiusRecommendations parentCartItemId={cartItemId} />
-
       {/* ── 3-Region Layout Grid ─────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* CENTER COLUMN (Tabbed Council Audit Reports) - 7 cols on desktop */}
@@ -335,7 +349,7 @@ export default function SiteDetailPage({ cartItemId, sessionId, onBack }: SiteDe
                 Run the 5-Agent Council Audit to fetch Mireye GIS facts and generate discipline breakdown scores.
               </p>
               <button
-                onClick={handleStartEvaluation}
+                onClick={handleStartEvaluationClick}
                 className="px-4 py-2 bg-[#0566D9] text-white font-medium text-xs rounded shadow-[0_0_12px_rgba(5,102,217,0.4)]"
               >
                 Run Audit Now
@@ -430,6 +444,18 @@ export default function SiteDetailPage({ cartItemId, sessionId, onBack }: SiteDe
                 >
                   <span className="material-symbols-outlined text-sm">gavel</span>
                   <span>Compliance</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveAuditTab("recommendations")}
+                  className={`px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 ${
+                    activeAuditTab === "recommendations"
+                      ? "bg-purple-600 text-white shadow-[0_0_12px_rgba(147,51,234,0.4)]"
+                      : "text-[#BBCABF] hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-sm">radar</span>
+                  <span>Recommendations</span>
                 </button>
               </div>
 
@@ -647,8 +673,15 @@ export default function SiteDetailPage({ cartItemId, sessionId, onBack }: SiteDe
                 </div>
               )}
 
+              {/* TAB: RECOMMENDATIONS */}
+              {activeAuditTab === "recommendations" && (
+                <div className="space-y-4 animate-fadeIn">
+                  <RadiusRecommendations parentCartItemId={cartItemId} />
+                </div>
+              )}
+
               {/* TABS 2-6: INDIVIDUAL DISCIPLINE AGENT REPORTS */}
-              {activeAuditTab !== "summary" && activeAuditTab !== "compliance" && (
+              {activeAuditTab !== "summary" && activeAuditTab !== "compliance" && activeAuditTab !== "recommendations" && (
                 <div className="glass-panel p-6 rounded-xl space-y-4 animate-fadeIn">
                   {(() => {
                     const agent = getAgentForTab(activeAuditTab);
@@ -901,6 +934,11 @@ export default function SiteDetailPage({ cartItemId, sessionId, onBack }: SiteDe
           </div>
         </div>
       </div>
+      <RequirementModal
+        isOpen={showReqModal}
+        onClose={() => setShowReqModal(false)}
+        onSubmit={handleConfirmEvaluation}
+      />
     </div>
   );
 }
