@@ -228,3 +228,41 @@ export async function compareSites(cartItemIds: string[]): Promise<ComparisonRes
   }
   return res.json();
 }
+
+// ---------------------------------------------------------------------------
+// Compliance Agent API Calls
+// ---------------------------------------------------------------------------
+
+export interface ComplianceFinding {
+  finding: string;
+  source: string;
+  source_type: string;
+  record_id?: string;
+  date?: string;
+  status?: string;
+  confidence?: number;
+}
+
+export interface ComplianceCategoryResult {
+  status: string;
+  score?: number;
+  findings: ComplianceFinding[];
+}
+
+export interface ComplianceReport {
+  property: { address: string; latitude?: number; longitude?: number };
+  overall: { risk: string; score: number; confidence: number; summary?: string };
+  environmental: ComplianceCategoryResult;
+  building: ComplianceCategoryResult;
+  fire: ComplianceCategoryResult;
+  zoning: ComplianceCategoryResult;
+  occupancy: ComplianceCategoryResult;
+  data_sources: string[];
+  limitations: string[];
+}
+
+export async function fetchComplianceReport(cartItemId: string): Promise<ComplianceReport> {
+  const res = await fetch(`${API_BASE}/compliance/${encodeURIComponent(cartItemId)}`);
+  if (!res.ok) throw new Error("Failed to fetch compliance report");
+  return res.json();
+}

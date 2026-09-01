@@ -255,6 +255,8 @@ function toggleClear() {
 // ── Submit ────────────────────────────────────────────────────────────────────
 
 submitBtn.addEventListener("click", handleSubmit);
+const radiusBtn = document.getElementById("btn-radius");
+if (radiusBtn) radiusBtn.addEventListener("click", handleRadiusSearch);
 
 // Allow Ctrl+Enter / Cmd+Enter to submit from textarea
 addressInput.addEventListener("keydown", (e) => {
@@ -262,6 +264,81 @@ addressInput.addEventListener("keydown", (e) => {
     handleSubmit();
   }
 });
+
+async function handleRadiusSearch() {
+  const address = addressInput.value.trim();
+  if (!address) {
+    setStatus("❌ Please enter an address first.", "error");
+    addressInput.focus();
+    return;
+  }
+  if (!currentSessionId) {
+    setStatus("❌ No active session. Please connect first.", "error");
+    return;
+  }
+
+  setRadiusLoading(true);
+  setStatus("Geocoding & Saving Target...");
+
+  try {
+    const geoRes = await fetch(`${API_BASE}/geocode?address=${encodeURIComponent(address)}`);
+    const geoData = await geoRes.json();
+    if (!geoData.lat || !geoData.lng) throw new Error("Could not find coordinates for this address.");
+
+    // 1. Create the parent item FIRST so we have an ID for the background script
+    const payload = { session_id: currentSessionId, address };
+    const sourceUrl = currentCaptureData?.source_url || currentTabUrl || undefined;
+    if (sourceUrl) payload.source_url = sourceUrl;
+    if (currentCaptureData) {
+      if (currentCaptureData.listing_title) payload.listing_title = currentCaptureData.listing_title;
+      if (currentCaptureData.image_url) payload.image_url = currentCaptureData.image_url;
+      if (currentCaptureData.details) payload.details = currentCaptureData.details;
+      if (currentCaptureData.price) payload.details = { ...(payload.details || {}), price: currentCaptureData.price };
+    }
+
+    const parentRes = await fetch(`${API_BASE}/cart-items`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!parentRes.ok) throw new Error("Failed to add parent item");
+    const parentData = await parentRes.json();
+
+    setStatus("Scanning radius (stealth mode)...");
+
+    // 2. Launch the background scraper and DO NOT wait for the result
+    // The background script will POST the results to the backend itself!
+    chrome.runtime.sendMessage({
+      type: "FETCH_RADIUS",
+      lat: geoData.lat,
+      lng: geoData.lng,
+      address: address,
+      parent_id: parentData.cart_item_id,
+      session_id: currentSessionId
+    });
+
+    addressInput.value = "";
+    toggleClear();
+    currentCaptureData = null;
+    chrome.storage.local.remove([SELECTION_KEY, CAPTURE_KEY]);
+    setStatus("🚀 Radius agent deployed! (Popup can be safely closed)", "success");
+    await loadRecentItems(currentSessionId);
+    setTimeout(() => setStatus(""), 4000);
+
+  } catch (err) {
+    setStatus(`❌ ${err.message}`, "error");
+  } finally {
+    setRadiusLoading(false);
+  }
+}
+
+function setRadiusLoading(on) {
+  if (!radiusBtn) return;
+  radiusBtn.disabled = on;
+  document.getElementById("radius-label").textContent = on ? "Scanning…" : "Scan 2km Radius";
+  document.getElementById("radius-spinner").style.display = on ? "block" : "none";
+  document.getElementById("radius-icon").style.display = on ? "none" : "block";
+}
 
 async function handleSubmit() {
   const address = addressInput.value.trim();

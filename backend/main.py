@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import json
 import os
+import openai
 import re
 import sqlite3
 import uuid
@@ -29,6 +30,28 @@ from typing import Any, Optional
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from geopy.geocoders import Nominatim
+from geopy.distance import geodesic
+import time
+from geopy.geocoders import GoogleV3
+
+GOOGLE_API_KEY = "AIzaSyAKEmoEiK7NwUSmmKIyo7xRecwAKm65YVY"
+google_geocoder = GoogleV3(api_key=GOOGLE_API_KEY)
+osm_geocoder = Nominatim(user_agent="mireye_agent")
+
+def robust_geocode(address: str):
+    try:
+        # Try Google first
+        return google_geocoder.geocode(address)
+    except Exception as e:
+        print(f"Google Geocoding failed (Billing/Quota issue?), falling back to OSM: {e}")
+        time.sleep(1.1) # Respect OSM limits
+        try:
+            return osm_geocoder.geocode(address)
+        except Exception as e2:
+            print(f"OSM Geocoding also failed: {e2}")
+            return None
+
 
 # ---------------------------------------------------------------------------
 # Load backend .env (OPENAI_API_KEY, etc.) before anything else
@@ -101,6 +124,10 @@ def init_db() -> None:
             conn.execute("ALTER TABLE cart_items ADD COLUMN details TEXT")
         if "llm_structured" not in existing_cols:
             conn.execute("ALTER TABLE cart_items ADD COLUMN llm_structured TEXT")
+        if "parent_cart_item_id" not in existing_cols:
+            conn.execute("ALTER TABLE cart_items ADD COLUMN parent_cart_item_id TEXT")
+        if "is_radius_recommendation" not in existing_cols:
+            conn.execute("ALTER TABLE cart_items ADD COLUMN is_radius_recommendation BOOLEAN")
 
         # ── Evaluation pipeline tables (migration: added in v0.3.3) ───────
         conn.execute(
@@ -164,6 +191,16 @@ def init_db() -> None:
             """
         )
 
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS compliance_reports (
+                cart_item_id TEXT PRIMARY KEY,
+                report_json  TEXT NOT NULL,
+                created_at   TEXT NOT NULL
+            )
+            """
+        )
+
         conn.commit()
 
 
@@ -176,9 +213,11 @@ init_db()
 from evaluate.router import router as evaluate_router          # noqa: E402 (after init_db)
 from evaluate.compare_router import router as compare_router  # noqa: E402 (after init_db)
 from chat.router import router as chat_router                  # noqa: E402 (after init_db)
+from compliance.router import router as compliance_router      # noqa: E402 (after init_db)
 app.include_router(evaluate_router)
 app.include_router(compare_router)
 app.include_router(chat_router)
+app.include_router(compliance_router)
 
 # ---------------------------------------------------------------------------
 # Robust Parsing & Type Normalization Helpers
@@ -405,13 +444,13 @@ class CartItemIn(BaseModel):
     listing_title: Optional[str] = None
     image_url: Optional[str] = None
     details: Optional[dict[str, Any]] = None
-
+    parent_cart_item_id: Optional[str] = None
+    is_radius_recommendation: Optional[bool] = False
 
 class CartItemOut(BaseModel):
     cart_item_id: str
     address: str
     status: str = "added"
-
 
 class CartItemFull(BaseModel):
     cart_item_id: str
@@ -422,6 +461,8 @@ class CartItemFull(BaseModel):
     details: Optional[dict[str, Any]]
     llm_structured: Optional[dict[str, Any]]
     added_at: str
+    parent_cart_item_id: Optional[str] = None
+    is_radius_recommendation: Optional[bool] = False
 
 
 # ---------------------------------------------------------------------------
@@ -471,7 +512,7 @@ def add_cart_item(item: CartItemIn) -> CartItemOut:
             conn.execute(
                 """
                 UPDATE cart_items
-                SET address = ?, source_url = ?, listing_title = ?, image_url = ?, details = ?, llm_structured = ?, added_at = ?
+                SET address = ?, source_url = ?, listing_title = ?, image_url = ?, details = ?, llm_structured = ?, added_at = ?, parent_cart_item_id = ?, is_radius_recommendation = ?
                 WHERE cart_item_id = ?
                 """,
                 (
@@ -482,6 +523,8 @@ def add_cart_item(item: CartItemIn) -> CartItemOut:
                     details_json,
                     llm_structured_json,
                     added_at,
+                    item.parent_cart_item_id,
+                    item.is_radius_recommendation,
                     cart_item_id,
                 ),
             )
@@ -492,8 +535,8 @@ def add_cart_item(item: CartItemIn) -> CartItemOut:
         conn.execute(
             """
             INSERT INTO cart_items
-                (cart_item_id, session_id, address, source_url, listing_title, image_url, details, llm_structured, added_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                (cart_item_id, session_id, address, source_url, listing_title, image_url, details, llm_structured, added_at, parent_cart_item_id, is_radius_recommendation)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 cart_item_id,
@@ -505,6 +548,8 @@ def add_cart_item(item: CartItemIn) -> CartItemOut:
                 details_json,
                 llm_structured_json,
                 added_at,
+                item.parent_cart_item_id,
+                item.is_radius_recommendation,
             ),
         )
         conn.commit()
@@ -578,15 +623,217 @@ def get_cart_items(
                 details=details,
                 llm_structured=llm_structured,
                 added_at=row["added_at"],
+                parent_cart_item_id=row["parent_cart_item_id"] if "parent_cart_item_id" in row.keys() else None,
+                is_radius_recommendation=bool(row["is_radius_recommendation"]) if "is_radius_recommendation" in row.keys() else False,
             )
         )
     return result
 
 
 # ---------------------------------------------------------------------------
-# Health & Root Check
+# Radius & Geocoding
 # ---------------------------------------------------------------------------
 
+@app.get("/geocode")
+def geocode(address: str):
+    try:
+        location = robust_geocode(address)
+        if location:
+            return {"lat": location.latitude, "lng": location.longitude}
+        return {"lat": None, "lng": None}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+class RadiusSearchIn(BaseModel):
+    session_id: str
+    properties: list[dict[str, Any]]
+    parent_lat: Optional[float] = None
+    parent_lng: Optional[float] = None
+
+
+def llm_clean_address_batch(raw_addresses: list[str]) -> list[str]:
+    """Uses LLM to cleanly format raw URL slugs into physical addresses before geocoding."""
+    if not raw_addresses: return []
+    try:
+        client = openai.OpenAI()
+        prompt = "Extract and clean the physical address (Street, City, State, Zip) from each of the following messy strings/URL slugs. Return a plain text list where each line corresponds exactly to the input line. Output ONLY the cleaned address per line, no numbers, no bullets.\n\n"
+        prompt += "\n".join(raw_addresses)
+        
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You are a bulk address formatter. Output exactly one line per input line, containing ONLY the cleaned address. If it's just a business name and city, output the business name and city. If it's a URL slug like 'california-chicago-retail', output 'Chicago, CA'."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.0
+        )
+        lines = [line.strip().lstrip("-").lstrip("*").strip() for line in response.choices[0].message.content.strip().split("\n")]
+        # Only use it if the LLM returned the exact number of lines
+        if len(lines) == len(raw_addresses):
+            return lines
+        else:
+            print(f"LLM batch address length mismatch: {len(lines)} vs {len(raw_addresses)}")
+            return raw_addresses
+    except Exception as e:
+        print(f"LLM batch address cleaning failed: {e}")
+        return raw_addresses
+
+
+@app.post("/cart-items/{cart_item_id}/radius-search")
+def radius_search(cart_item_id: str, payload: RadiusSearchIn):
+    with get_db() as conn:
+        parent = conn.execute("SELECT * FROM cart_items WHERE cart_item_id = ?", (cart_item_id,)).fetchone()
+        if not parent:
+            raise HTTPException(status_code=404, detail="Cart item not found")
+        
+        try:
+            parent_llm = json.loads(parent["llm_structured"]) if parent["llm_structured"] else {}
+        except Exception:
+            parent_llm = {}
+
+    parent_type = parent_llm.get("property", {}).get("property_type")
+    parent_price = parent_llm.get("financials", {}).get("asking_price")
+    parent_address = parent["address"]
+    
+    # 1. Geocode Parent Address
+    parent_coords = None
+    if payload.parent_lat is not None and payload.parent_lng is not None:
+        parent_coords = (payload.parent_lat, payload.parent_lng)
+    else:
+        geolocator = Nominatim(user_agent="mireye_agent")
+        try:
+            p_loc = geolocator.geocode(parent_address)
+            if p_loc:
+                parent_coords = (p_loc.latitude, p_loc.longitude)
+        except Exception:
+            pass
+
+    # Pre-process all addresses with LLM for perfect geocoding accuracy
+    raw_addrs_for_llm = []
+    for prop in payload.properties:
+        raw_addrs_for_llm.append(prop.get("address", "").split("?")[0].split("#")[0])
+    
+    print(f"Cleaning {len(raw_addrs_for_llm)} addresses with LLM...")
+    cleaned_addrs = llm_clean_address_batch(raw_addrs_for_llm)
+    
+    # 2. Rule-Based Scoring (Distance > Type > Price)
+    scored_props = []
+    
+    for idx, prop in enumerate(payload.properties):
+        prop_addr = prop.get("address", "")
+        if not prop_addr or "Nearby Property" in prop_addr or "Radius Comparable" in prop_addr:
+            continue
+            
+        # Reject generic slugs
+        has_digit = any(ch.isdigit() for ch in prop_addr)
+        generic_slugs = {"commercial-real-estate", "for-sale", "properties", "industrial", "retail", "businesses"}
+        if not has_digit and prop_addr.lower().replace(" ", "-") in generic_slugs:
+            continue
+            
+        clean_addr = cleaned_addrs[idx]
+        
+        # Geocode the property
+        dist_km = None
+        if parent_coords:
+            try:
+                p_loc = robust_geocode(clean_addr)
+                if p_loc:
+                    dist_km = geodesic(parent_coords, (p_loc.latitude, p_loc.longitude)).km
+            except Exception as e:
+                print(f"Geocoding failed for {clean_addr}: {e}")
+                
+        # Parse structured data
+        raw_details = prop.get("details", {})
+        llm_struct = build_llm_structured_data(
+            address=prop.get("address", ""),
+            listing_title=prop.get("listing_title"),
+            source_url=prop.get("source_url"),
+            image_url=prop.get("image_url"),
+            details=raw_details,
+        )
+        
+        prop_type = llm_struct.get("property", {}).get("property_type")
+        prop_price = llm_struct.get("financials", {}).get("asking_price")
+        
+        # Calculate Rule-Based Score
+        score = 0
+        
+        # RULE 1: Distance (Highest priority, up to 50 points)
+        # If distance is known, closest gets most points.
+        # 0km = 50 pts, 2.5km = 25 pts, >5km = 0 pts.
+        if dist_km is not None:
+            score += max(0, 50 - (dist_km * 10))
+            item_dist = round(dist_km, 2)
+        else:
+            # If we couldn't geocode it, heavily penalize it so it acts as a fallback
+            score += 0
+            item_dist = "Unknown"
+            
+        # RULE 2: Property Type (Up to 30 points)
+        if prop_type and parent_type and str(prop_type).lower() == str(parent_type).lower():
+            score += 30
+            
+        # RULE 3: Price (Up to 20 points)
+        if prop_price and parent_price:
+            diff = abs(prop_price - parent_price) / parent_price
+            score += max(0, 20 - (diff * 40))
+            
+        scored_props.append({
+            "prop": prop, 
+            "score": score, 
+            "llm_struct": llm_struct,
+            "dist_km": item_dist
+        })
+        
+    # Sort by the final rule-based score (Highest first)
+    scored_props.sort(key=lambda x: x["score"], reverse=True)
+    
+    # Take the top 5 Best Recommended properties
+    filtered_top = scored_props[:5]
+
+    # 4. Insert into DB
+    results = []
+    for item in filtered_top:
+        prop = item["prop"]
+        # Inject distance into the LLM structured identity so the frontend can display it
+        item["llm_struct"]["identity"]["distance_km"] = item.get("dist_km", "Unknown")
+        
+        new_id = str(uuid.uuid4())
+        with get_db() as conn:
+            conn.execute(
+                """
+                INSERT INTO cart_items
+                (cart_item_id, session_id, address, source_url, listing_title, image_url, details, llm_structured, added_at, parent_cart_item_id, is_radius_recommendation)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    new_id,
+                    payload.session_id,
+                    prop.get("address", ""),
+                    prop.get("source_url", ""),
+                    prop.get("listing_title", ""),
+                    prop.get("image_url", ""),
+                    json.dumps(prop.get("details", {})),
+                    json.dumps(item["llm_struct"]),
+                    datetime.now(timezone.utc).isoformat(),
+                    cart_item_id,
+                    True
+                )
+            )
+            conn.commit()
+            
+            results.append({
+                "cart_item_id": new_id,
+                "address": prop.get("address", ""),
+                "dist_km": item.get("dist_km", "Unknown")
+            })
+            
+    return {"status": "success", "parent_id": cart_item_id, "top_5": results}
+
+
+# ---------------------------------------------------------------------------
+# Health & Root Check
+# ---------------------------------------------------------------------------
 
 @app.get("/")
 def root() -> dict:

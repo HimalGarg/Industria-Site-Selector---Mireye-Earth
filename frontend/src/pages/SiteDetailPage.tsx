@@ -5,6 +5,7 @@ import {
   ChatMessage,
   ListingMemory,
   AgentResult,
+  ComplianceReport,
   fetchCartItems,
   fetchEvaluationsForCartItem,
   startEvaluation,
@@ -12,7 +13,10 @@ import {
   fetchChatHistory,
   sendChatMessage,
   fetchListingMemory,
+  fetchComplianceReport,
 } from "../api";
+
+import RadiusRecommendations from "../components/RadiusRecommendations";
 
 interface SiteDetailPageProps {
   cartItemId: string;
@@ -23,11 +27,13 @@ interface SiteDetailPageProps {
 export default function SiteDetailPage({ cartItemId, sessionId, onBack }: SiteDetailPageProps) {
   const [item, setItem] = useState<CartItem | null>(null);
   const [evaluation, setEvaluation] = useState<EvaluationResult | null>(null);
+  const [compliance, setCompliance] = useState<ComplianceReport | null>(null);
   const [loadingItem, setLoadingItem] = useState<boolean>(true);
   const [evaluating, setEvaluating] = useState<boolean>(false);
+  const [loadingCompliance, setLoadingCompliance] = useState<boolean>(false);
   const [showRawFacts, setShowRawFacts] = useState<boolean>(false);
 
-  // Tab State for Council Audit Reports: "summary" | "energy" | "water" | "surface" | "transport" | "risk"
+  // Tab State for Council Audit Reports: "summary" | "energy" | "water" | "surface" | "transport" | "risk" | "compliance"
   const [activeAuditTab, setActiveAuditTab] = useState<string>("summary");
 
   // Chat & Memory State
@@ -62,10 +68,25 @@ export default function SiteDetailPage({ cartItemId, sessionId, onBack }: SiteDe
 
       // 3. Fetch Chat History & Listing Memory
       loadChatAndMemory();
+      
+      // 4. Fetch Compliance Report
+      loadCompliance();
     } catch (err) {
       console.error(err);
     } finally {
       setLoadingItem(false);
+    }
+  };
+
+  const loadCompliance = async () => {
+    setLoadingCompliance(true);
+    try {
+      const rep = await fetchComplianceReport(cartItemId);
+      setCompliance(rep);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingCompliance(false);
     }
   };
 
@@ -287,6 +308,9 @@ export default function SiteDetailPage({ cartItemId, sessionId, onBack }: SiteDe
         )}
       </div>
 
+      {/* ── Radius Recommendations ─────────────────────────────────────────── */}
+      <RadiusRecommendations parentCartItemId={cartItemId} />
+
       {/* ── 3-Region Layout Grid ─────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* CENTER COLUMN (Tabbed Council Audit Reports) - 7 cols on desktop */}
@@ -394,6 +418,18 @@ export default function SiteDetailPage({ cartItemId, sessionId, onBack }: SiteDe
                 >
                   <span className="material-symbols-outlined text-sm">warning</span>
                   <span>Risk</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveAuditTab("compliance")}
+                  className={`px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 ${
+                    activeAuditTab === "compliance"
+                      ? "bg-fuchsia-600 text-white shadow-[0_0_12px_rgba(192,38,211,0.4)]"
+                      : "text-[#BBCABF] hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-sm">gavel</span>
+                  <span>Compliance</span>
                 </button>
               </div>
 
@@ -524,8 +560,95 @@ export default function SiteDetailPage({ cartItemId, sessionId, onBack }: SiteDe
                 </div>
               )}
 
+              {/* TAB: COMPLIANCE AGENT REPORT */}
+              {activeAuditTab === "compliance" && (
+                <div className="space-y-4 animate-fadeIn">
+                  {loadingCompliance ? (
+                    <div className="p-8 glass-panel rounded-xl text-center space-y-4">
+                      <div className="w-10 h-10 border-3 border-[#4EDEA3] border-t-transparent rounded-full animate-spin mx-auto"></div>
+                      <h3 className="font-display font-semibold text-lg text-white">Running Regulatory Due-Diligence</h3>
+                      <p className="text-xs text-[#BBCABF] max-w-md mx-auto">
+                        Querying EPA ECHO and Local Government Open Data portals...
+                      </p>
+                    </div>
+                  ) : !compliance ? (
+                    <div className="p-8 glass-panel rounded-xl text-center space-y-4">
+                       <h3 className="font-display font-semibold text-lg text-white">No Compliance Data Found</h3>
+                       <p className="text-xs text-[#BBCABF] max-w-md mx-auto">The agent could not generate a compliance report.</p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="p-6 rounded-xl bg-gradient-to-br from-fuchsia-900/20 to-transparent border border-fuchsia-500/30 flex flex-col md:flex-row items-center gap-6">
+                        <div className="relative w-24 h-24 flex items-center justify-center shrink-0">
+                          <div className="absolute inset-0 flex flex-col items-center justify-center">
+                            <span className="font-display font-bold text-3xl text-fuchsia-400">{compliance.overall.score}</span>
+                            <span className="text-[9px] uppercase tracking-wider text-[#BBCABF]">Score</span>
+                          </div>
+                        </div>
+
+                        <div className="space-y-1 text-center md:text-left">
+                          <div className="text-[10px] text-[#BBCABF] uppercase tracking-widest font-mono">Regulatory Due Diligence</div>
+                          <h3 className="font-display text-2xl font-bold flex items-center gap-2">
+                            {compliance.overall.risk === "POTENTIAL_RISK" && <span className="text-rose-400">🔴 Potential Risk</span>}
+                            {compliance.overall.risk === "VIOLATION_FOUND" && <span className="text-red-500">❌ Violation Found</span>}
+                            {compliance.overall.risk === "CLEAR" && <span className="text-[#4EDEA3]">🟢 Clear</span>}
+                            {compliance.overall.risk === "LOW" && <span className="text-[#4EDEA3]">🟢 Low Risk</span>}
+                            {compliance.overall.risk === "MEDIUM" && <span className="text-amber-400">🟡 Medium Risk</span>}
+                            {compliance.overall.risk === "HIGH" && <span className="text-rose-400">🔴 High Risk</span>}
+                            {compliance.overall.risk === "REQUIRES_MANUAL_REVIEW" && <span className="text-amber-400">🟡 Manual Review Required</span>}
+                          </h3>
+                          <p className="text-xs text-[#BBCABF] leading-relaxed">
+                            {compliance.overall.summary}
+                          </p>
+                          <div className="text-[10px] text-fuchsia-300 mt-2">
+                            Data Confidence: {compliance.overall.confidence}%
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="glass-panel p-6 rounded-xl space-y-4">
+                         <h3 className="font-display font-semibold text-lg text-white border-b border-white/5 pb-2">Category Breakdown (Municipal Data)</h3>
+                         {["environmental", "building", "zoning", "fire", "occupancy"].map((cat) => {
+                           const catData = (compliance as any)[cat];
+                           if (!catData) return null;
+
+                           const normalFindings = catData.findings ? catData.findings.filter((f: any) => f.source_type !== "llm_agent" && f.source !== "LLM") : [];
+
+                           if (normalFindings.length === 0 && catData.findings && catData.findings.length > 0) return null;
+
+                           return (
+
+                             <div key={cat} className="mb-4">
+                               <div className="flex justify-between items-center bg-[#0D121C] p-3 rounded-t-lg border border-white/5">
+                                 <span className="font-mono text-xs uppercase font-bold text-white">{cat}</span>
+                                 <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-white/5 text-[#BBCABF]">
+                                   {catData.status} {catData.score !== null ? `(${catData.score})` : ""}
+                                 </span>
+                               </div>
+                               <div className="bg-[#0A0E16] p-3 rounded-b-lg border-x border-b border-white/5 space-y-2 max-h-64 overflow-y-auto">
+                                 {normalFindings.length > 0 ? (
+                                   normalFindings.map((f: any, i: number) => (
+                                     <div key={i} className="text-xs text-[#DFE2EE] border-b border-white/5 pb-2 last:border-0 last:pb-0">
+                                       <span className="font-bold mr-1">{f.status === "POTENTIAL_RISK" ? "⚠️" : f.status === "CLEAR" ? "✅" : "ℹ️"}</span>
+                                       {f.finding}
+                                       <div className="text-[10px] text-[#BBCABF] mt-1 ml-5">Source: {f.source}</div>
+                                     </div>
+                                   ))
+                                 ) : (
+                                   <div className="text-xs text-[#BBCABF] italic">No specific findings.</div>
+                                 )}
+                               </div>
+                             </div>
+                           );
+                         })}
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+
               {/* TABS 2-6: INDIVIDUAL DISCIPLINE AGENT REPORTS */}
-              {activeAuditTab !== "summary" && (
+              {activeAuditTab !== "summary" && activeAuditTab !== "compliance" && (
                 <div className="glass-panel p-6 rounded-xl space-y-4 animate-fadeIn">
                   {(() => {
                     const agent = getAgentForTab(activeAuditTab);

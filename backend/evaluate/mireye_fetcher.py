@@ -184,6 +184,7 @@ def _raw_fetch(client: MireyeClient, address: str, fields: list[str]) -> dict[st
     get the geocode block.
     """
     import urllib.request
+    import urllib.error
 
     config = client.config
     payload = {"fields": fields, "address": address}
@@ -193,10 +194,18 @@ def _raw_fetch(client: MireyeClient, address: str, fields: list[str]) -> dict[st
     import json as _json
     data = _json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(url, data=data, headers=headers, method="POST")
-    import time
-    with urllib.request.urlopen(req, timeout=config.timeout) as resp:
-        body = resp.read().decode("utf-8")
-    return _json.loads(body)
+    try:
+        with urllib.request.urlopen(req, timeout=config.timeout) as resp:
+            body = resp.read().decode("utf-8")
+        return _json.loads(body)
+    except urllib.error.HTTPError as e:
+        try:
+            error_body = e.read().decode("utf-8")
+            err_json = _json.loads(error_body)
+            msg = err_json.get("detail", {}).get("message", error_body)
+            raise RuntimeError(f"HTTP {e.code}: {msg}") from None
+        except Exception:
+            raise e
 
 
 # ---------------------------------------------------------------------------

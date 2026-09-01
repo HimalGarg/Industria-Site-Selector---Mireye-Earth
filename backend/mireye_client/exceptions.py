@@ -1,0 +1,2 @@
+class MireyeAPIError(Exception):
+    pass

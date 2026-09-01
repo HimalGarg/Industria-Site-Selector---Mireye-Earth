@@ -9,6 +9,7 @@ import {
 } from "./api";
 import SiteDetailPage from "./pages/SiteDetailPage";
 import ComparePage from "./pages/ComparePage";
+import RecommendationsPage from "./pages/RecommendationsPage";
 
 export default function App() {
   const [healthStatus, setHealthStatus] = useState<string>("connecting");
@@ -20,7 +21,7 @@ export default function App() {
   const [rawViewItemIds, setRawViewItemIds] = useState<Record<string, boolean>>({});
 
   // Client-Side Routing State: "pipeline" | "site" | "compare"
-  const [route, setRoute] = useState<"pipeline" | "site" | "compare">("pipeline");
+  const [route, setRoute] = useState<"pipeline" | "site" | "compare" | "recommendations">("pipeline");
   const [activeCartItemId, setActiveCartItemId] = useState<string | null>(null);
 
   // 1. Health check & Initial Data Fetch with Auto-refresh
@@ -93,6 +94,10 @@ export default function App() {
     setRoute("compare");
   };
 
+  const navigateToRecommendations = () => {
+    setRoute("recommendations");
+  };
+
   const navigateToPipeline = () => {
     setRoute("pipeline");
     setActiveCartItemId(null);
@@ -100,6 +105,9 @@ export default function App() {
 
   // Filtered items for Pipeline view
   const filteredCartItems = cartItems.filter((item) => {
+    // Hide radius recommendations from the main pipeline
+    if ((item as any).is_radius_recommendation) return false;
+
     if (selectedFilter === "crexi") return item.source_url?.includes("crexi");
     if (selectedFilter === "loopnet") return item.source_url?.includes("loopnet");
     return true;
@@ -156,6 +164,19 @@ export default function App() {
             <span>Compare Sites</span>
             <span className="ml-auto bg-[#262A33] text-xs px-2 py-0.5 rounded text-[#4EDEA3] font-mono">Matrix</span>
           </button>
+          <button
+            onClick={navigateToRecommendations}
+            className={`w-full px-4 py-3 rounded flex items-center gap-3 text-sm font-medium transition-all ${
+              route === "recommendations"
+                ? "bg-[#0566D9]/20 text-[#4EDEA3] border-r-4 border-[#4EDEA3]"
+                : "text-[#BBCABF] hover:bg-white/5"
+            }`}
+          >
+            <span className="material-symbols-outlined text-[20px]">my_location</span>
+            <span>Recommendations</span>
+            <span className="ml-auto bg-[#262A33] text-xs px-2 py-0.5 rounded text-[#4EDEA3] font-mono">2km</span>
+          </button>
+
         </div>
 
         {/* Sidebar Footer */}
@@ -203,6 +224,19 @@ export default function App() {
           <ComparePage
             sessionId={sessionId}
             onBack={navigateToPipeline}
+          />
+        )}
+
+        
+        {/* ROUTE 4: Recommendations Page (/recommendations) */}
+        {route === "recommendations" && (
+          <RecommendationsPage
+            sessionId={sessionId}
+            onBack={navigateToPipeline}
+            onOpenSite={(id) => {
+              setActiveCartItemId(id);
+              setRoute("site");
+            }}
           />
         )}
 

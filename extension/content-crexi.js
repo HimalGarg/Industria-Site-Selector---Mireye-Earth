@@ -310,3 +310,4 @@ if (document.readyState === "loading") {
 } else {
   crexiAdapter.boot();
 }
+
