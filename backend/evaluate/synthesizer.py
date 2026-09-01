@@ -47,7 +47,7 @@ Return ONLY valid JSON matching this schema exactly:
 """
 
 
-def _build_synthesizer_prompt(agent_results: list[dict[str, Any]]) -> str:
+def _build_synthesizer_prompt(agent_results: list[dict[str, Any]], user_requirements: str | None = None) -> str:
     """Build the synthesizer prompt from the 5 agent results."""
 
     # Format each agent result as a concise summary block
@@ -72,10 +72,14 @@ def _build_synthesizer_prompt(agent_results: list[dict[str, Any]]) -> str:
         agent_blocks.append(block)
 
     agent_text = "\n\n".join(agent_blocks)
+    
+    req_block = ""
+    if user_requirements:
+        req_block = f"\nUSER REQUIREMENTS:\nThe user explicitly requested: \"{user_requirements}\"\nUse these requirements when writing the narrative summary, generating the final recommendation, and assigning the overall score. Highlight if the site aligns with or conflicts with their specific needs.\n"
 
     return f"""You are the Council Synthesizer for a commercial real estate site evaluation.
 You have received reports from 5 specialized agents. Your job is to produce a final, board-readable synthesis.
-
+{req_block}
 AGENT REPORTS:
 {agent_text}
 
@@ -85,7 +89,7 @@ YOUR TASK:
 3. List ALL conflicts_flagged:
    - Cross-agent tensions: e.g., high Energy score (85) but high Risk score (20) — the site has power but environmental constraints.
    - Any listing-vs-Mireye disagreements flagged by individual agents — do NOT drop these. Surface them with specifics.
-4. Write a narrative_summary (2-4 paragraphs) suitable for a board presentation. Lead with the verdict. Name specific data points. Be honest about uncertainties.
+4. Write a narrative_summary (use clear bullet points/itemized lists for maximum clarity) suitable for a board presentation. Lead with the verdict. Name specific data points. Be honest about uncertainties.
 
 IMPORTANT: Do not make up data not present in the agent reports. Do not hide fatal risks in optimistic language.
 
@@ -97,18 +101,19 @@ IMPORTANT: Do not make up data not present in the agent reports. Do not hide fat
 # ---------------------------------------------------------------------------
 
 
-def run_synthesizer(agent_results: list[dict[str, Any]]) -> dict[str, Any]:
+def run_synthesizer(agent_results: list[dict[str, Any]], user_requirements: str | None = None) -> dict[str, Any]:
     """
     Run the synthesizer LLM call synchronously (called from background thread).
 
     Args:
         agent_results: List of 5 AgentResult dicts from run_all_agents()
+        user_requirements: Optional string detailing user-specified constraints
 
     Returns SynthesizerResult dict.
     """
     logger.info("[SYNTHESIZER] Starting synthesis of %d agent results", len(agent_results))
 
-    prompt = _build_synthesizer_prompt(agent_results)
+    prompt = _build_synthesizer_prompt(agent_results, user_requirements)
 
     model_name = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
     try:
@@ -117,6 +122,7 @@ def run_synthesizer(agent_results: list[dict[str, Any]]) -> dict[str, Any]:
             model=model_name,
             response_format={"type": "json_object"},
             temperature=0.2,
+            max_tokens=2048,
             messages=[
                 {"role": "system", "content": prompt},
                 {"role": "user",   "content": "Generate the synthesis report now."},

@@ -29,14 +29,14 @@ def run_llm_compliance_fallback(address: str, jurisdiction: str, category: str) 
         We lack direct API access to the local government database for the category: {category.upper()}.
         Please provide 1-2 highly specific, realistic baseline compliance findings for this category in this jurisdiction.
         Include typical local ordinances, expected requirements, or known historical zoning/fire/environmental rules in this area.
-        Keep it concise.
+        Format your response as a clear bulleted list (itemized points). Keep it concise and professional.
         """
         
         response = client.chat.completions.create(
             model=model_name,
             messages=[{"role": "system", "content": prompt}],
             temperature=0.2,
-            max_tokens=150
+            max_tokens=1024
         )
         
         ai_text = response.choices[0].message.content.strip()

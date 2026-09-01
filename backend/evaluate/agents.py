@@ -139,10 +139,10 @@ AGENT_OUTPUT_SCHEMA = """
 Return ONLY valid JSON matching this schema exactly:
 {
   "agent_name": "string — the agent's display name",
-  "score": integer between 0 and 100,
-  "summary": "string — 1 to 2 sentence verdict",
-  "memo": "string — full written reasoning (3-6 paragraphs)",
-  "citations": [
+    "score": integer between 0 and 100,
+    "summary": "string - 1 to 2 sentence verdict",
+    "memo": "string - full written reasoning (use clear bullet points/itemized lists for maximum clarity)",
+    "citations": [
     { "source": "mireye" or "listing", "field": "field_name", "value": "string representation of value" }
   ],
   "data_availability": "full" or "partial" or "unavailable"
@@ -158,10 +158,11 @@ def _energy_system_prompt(
     agent_name: str,
     mireye_block: str,
     proximity_block: str,
+    user_req_block: str,
 ) -> str:
     return f"""You are the {agent_name} for a commercial real estate site evaluation council.
 Your job: assess whether this site has adequate power and energy infrastructure to support commercial or industrial use.
-
+{user_req_block}
 {GROUNDING_RULE}
 
 MIREYE DATA (primary source — cite as "mireye"):
@@ -180,10 +181,10 @@ EVALUATION GUIDANCE:
 {AGENT_OUTPUT_SCHEMA}"""
 
 
-def _water_system_prompt(agent_name: str, mireye_block: str) -> str:
+def _water_system_prompt(agent_name: str, mireye_block: str, user_req_block: str) -> str:
     return f"""You are the {agent_name} for a commercial real estate site evaluation council.
 Your job: assess water availability, wastewater treatment capacity, and hydrological constraints at this site.
-
+{user_req_block}
 {GROUNDING_RULE}
 
 MIREYE DATA (primary source — cite as "mireye"):
@@ -203,10 +204,11 @@ def _surface_system_prompt(
     agent_name: str,
     mireye_block: str,
     listing_block: str,
+    user_req_block: str,
 ) -> str:
     return f"""You are the {agent_name} for a commercial real estate site evaluation council.
 Your job: assess terrain buildability, soil conditions, ecological constraints, and land cover at this site.
-
+{user_req_block}
 {GROUNDING_RULE}
 
 MIREYE DATA (primary source — cite as "mireye"):
@@ -230,10 +232,11 @@ def _transport_system_prompt(
     agent_name: str,
     mireye_block: str,
     proximity_block: str,
+    user_req_block: str,
 ) -> str:
     return f"""You are the {agent_name} for a commercial real estate site evaluation council.
 Your job: assess transportation and logistics access for this site — road, rail, air, and sea.
-
+{user_req_block}
 {GROUNDING_RULE}
 
 MIREYE DATA (primary source — cite as "mireye"):
@@ -256,10 +259,11 @@ def _risk_system_prompt(
     agent_name: str,
     mireye_block: str,
     listing_block: str,
+    user_req_block: str,
 ) -> str:
     return f"""You are the {agent_name} for a commercial real estate site evaluation council.
 Your job: assess environmental, regulatory, and contamination risks that could constrain, delay, or prevent development of this site.
-
+{user_req_block}
 {GROUNDING_RULE}
 
 MIREYE DATA (primary source — cite as "mireye"):
@@ -292,6 +296,7 @@ async def run_agent(
     llm_structured: dict[str, Any],
     agent_field_list: list[str],
     proximity_data: dict[str, Any] | None = None,
+    user_requirements: str | None = None,
 ) -> dict[str, Any]:
     """
     Run one agent asynchronously.
@@ -302,6 +307,7 @@ async def run_agent(
         llm_structured:    The cart item's llm_structured schema
         agent_field_list:  The specific fields for this agent
         proximity_data:    Optional /v1/proximity result for energy/transport agents
+        user_requirements: Optional string detailing user-specified constraints
 
     Returns an AgentResult dict matching the schema in Step 4 of the guide.
     """
@@ -326,17 +332,21 @@ async def run_agent(
         listing_slice = _extract_llm_structured_slice(llm_structured, slice_spec)
         listing_block = _format_listing_slice_for_prompt(listing_slice)
 
+    user_req_block = ""
+    if user_requirements:
+        user_req_block = f"\n\nUSER REQUIREMENTS:\nThe user has specified these requirements/preferences for this site:\n\"{user_requirements}\"\nTake these strictly into account when assessing risk, scoring, and writing your memo.\n"
+
     # Select the system prompt for this agent
     if agent_key == "energy":
-        prompt = _energy_system_prompt(agent_name, mireye_block, proximity_block)
+        prompt = _energy_system_prompt(agent_name, mireye_block, proximity_block, user_req_block)
     elif agent_key == "water":
-        prompt = _water_system_prompt(agent_name, mireye_block)
+        prompt = _water_system_prompt(agent_name, mireye_block, user_req_block)
     elif agent_key == "surface":
-        prompt = _surface_system_prompt(agent_name, mireye_block, listing_block)
+        prompt = _surface_system_prompt(agent_name, mireye_block, listing_block, user_req_block)
     elif agent_key == "transport":
-        prompt = _transport_system_prompt(agent_name, mireye_block, proximity_block)
+        prompt = _transport_system_prompt(agent_name, mireye_block, proximity_block, user_req_block)
     elif agent_key == "risk":
-        prompt = _risk_system_prompt(agent_name, mireye_block, listing_block)
+        prompt = _risk_system_prompt(agent_name, mireye_block, listing_block, user_req_block)
     else:
         raise ValueError(f"Unknown agent_key: {agent_key!r}")
 
@@ -358,6 +368,7 @@ def _call_openai(agent_key: str, prompt: str) -> dict[str, Any]:
             model=model_name,
             response_format={"type": "json_object"},
             temperature=0.2,
+            max_tokens=2048,
             messages=[
                 {"role": "system", "content": prompt},
                 {"role": "user",   "content": "Generate your evaluation report now."},
@@ -411,6 +422,7 @@ async def run_all_agents(
     llm_structured: dict[str, Any],
     agent_field_map: dict[str, list[str]],
     proximity_results: dict[str, dict[str, Any]] | None = None,
+    user_requirements: str | None = None,
 ) -> list[dict[str, Any]]:
     """
     Run all 5 agents concurrently via asyncio.gather.
@@ -420,6 +432,7 @@ async def run_all_agents(
         llm_structured:     The listing's canonical schema
         agent_field_map:    AGENT_FIELD_MAP from config
         proximity_results:  Optional dict keyed by agent_key → proximity response
+        user_requirements:  Optional string of user goals for this site.
 
     Returns list of 5 AgentResult dicts (one per agent, in config order).
     """
@@ -432,6 +445,7 @@ async def run_all_agents(
             llm_structured=llm_structured,
             agent_field_list=fields,
             proximity_data=proximity_results.get(key),
+            user_requirements=user_requirements,
         )
         for key, fields in agent_field_map.items()
     ]
