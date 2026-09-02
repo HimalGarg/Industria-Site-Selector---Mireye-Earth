@@ -1,58 +1,41 @@
 # 🏢 Industria Site Selector — Mireye Earth & 5-Agent Council
 
-> **Next-Generation Commercial Real Estate (CRE) Site Selection & Intelligence Platform**
+> **An autonomous, multi-agent evaluation platform that independently underwrites and audits commercial real estate using physical GIS data.**
 
-The **Industria Site Selector** is an automated platform that speeds up industrial and commercial site selection. It connects raw property listings (like those from Crexi and LoopNet) directly to geospatial data and regulatory records, using a multi-agent backend to evaluate a site's true feasibility.
-
----
-
-## 🏗️ System Architecture
-
-The platform runs on a modern stack, separating the data capture from the heavy lifting of the agents and the user dashboard.
-
-```text
-┌──────────────────────────────────┐        ┌──────────────────────────────────┐
-│       CAPTURE & INGESTION        │        │      OBSIDIAN UI DASHBOARD       │
-│  (Chrome Manifest V3 Extension)  │        │   (React 18, Vite, Tailwind)     │
-│ - Auto-scrapes Crexi / LoopNet   │        │ - Bento-Grid Property Pipeline   │
-│ - Bypasses SPA routing maps      │        │ - Tabbed Agent Audit Drawers     │
-└────────────────┬─────────────────┘        └────────────────┬─────────────────┘
-                 │                                           │
-                 ▼                                           ▼
-┌────────────────┴───────────────────────────────────────────┴─────────────────┐
-│                           FASTAPI BACKEND SERVER                             │
-│             (REST API, Job Queues, Chat Memory, SQLite DB)                   │
-└────┬────────────────────────┬──────────────────────────┬─────────────────┬───┘
-     │                        │                          │                 │
-     ▼                        ▼                          ▼                 ▼
-┌────────────┐         ┌────────────┐            ┌───────────────┐  ┌───────────────┐
-│ Mireye GIS │         │ OpenAI API │            │  Govt Scraper │  │ Radius Engine │
-│ (58 Data   │         │ (Agents &  │            │ (Zoning &     │  │ (Haversine    │
-│  Layers)   │         │ Synthesis) │            │  Compliance)  │  │  Proximity)   │
-└────────────┘         └────────────┘            └───────────────┘  └───────────────┘
-```
+Most real estate tools simply aggregate listings. **Industria Site Selector** is fundamentally different: it deploys a network of autonomous AI agents to fact-check seller claims against hard geospatial and regulatory data, automatically flagging risks, contradictions, and physical constraints before human review.
 
 ---
 
-## 🧠 Core Features & The 5-Agent Council
+## 🧠 The Core Engine: Multi-Agent Site Underwriting
 
-### 1. 🏛️ The 5-Agent Evaluation Council
-When you evaluate a site, the backend doesn't just run one massive prompt. Instead, it uses `asyncio.gather()` to run five specialized AI agents concurrently. Each agent evaluates physical ground-truth data fetched from the Mireye Earth API:
+The heart of the platform is an asynchronous, multi-agent evaluation pipeline. When a property is captured, the system doesn't rely on a single AI prompt. Instead, it queries 58 distinct physical data layers from Mireye Earth (elevation, power grids, flood zones) and distributes that raw data to a council of 5 specialized agents.
 
-- **⚡ Energy & Power Agent:** Evaluates grid capacity, high-voltage transmission lines, and substation limits.
-- **💧 Water Agent:** Analyzes public water service areas, wastewater plant capacity, and wetlands counts.
-- **🏔️ Surface Agent:** Assesses elevation, terrain slope, soil drainage, and karst sinkhole risks.
-- **🚛 Transport Agent:** Audits drive-time distance to major highways, freight rail access, and seaports.
-- **⚠️ Risk Agent:** Flags fatal flaws such as FEMA flood zones, underground storage tank leaks, and orphaned wells.
+These agents run concurrently, meaning they analyze the site entirely independently of one another, simulating a team of specialized civil and environmental engineers.
 
-### 2. ⚙️ Agent Operational Workflow
+### 🏛️ The 5-Agent Council
+
+- **⚡ Energy & Power Agent:** Cross-references the property’s coordinates against geospatial power infrastructure. It calculates the physical distance to high-voltage transmission lines and substations to determine if the site can support heavy industrial loads.
+- **💧 Water Agent:** Evaluates public water service boundaries and watershed capacity. It flags if a property sits outside municipal utility zones, which would mandate expensive well and septic installations.
+- **🏔️ Surface Agent:** Processes topographic arrays to determine terrain slope and soil drainage. It calculates the exact grading requirements (e.g., identifying a 15% slope that makes warehouse construction economically unviable).
+- **🚛 Transport Agent:** Executes routing algorithms to determine actual drive-time logistical access to major interstate highways, freight rail nodes, and seaports, grading the site on supply-chain viability.
+- **⚠️ Risk Agent:** Overlays the site bounds with FEMA flood maps and EPA hazardous data. It actively searches for localized encumbrances, such as underground storage tank (UST) leaks within a 1km radius or critical habitat restrictions.
+
+---
+
+## ⚖️ The Synthesis & Contradiction Engine
+
+Because the 5 agents evaluate the site concurrently and independently, their outputs must be reconciled. This is handled by the **Master Synthesizer**.
+
+The Synthesizer serves two primary functions:
+1. **Cross-Domain Arbitration:** It resolves tensions between conflicting agent reports. For example, if the Transport Agent gives a site a 95/100 for highway access, but the Risk Agent flags that the site sits in a 100-year flood plain, the Synthesizer dynamically downgrades the final viability score.
+2. **BS Detection (Seller vs. Ground Truth):** The Synthesizer reads the original seller listing notes (e.g., "Perfect flat land, ready to build") and mathematically cross-checks it against the physical GIS findings (e.g., the Surface Agent reports a severe 22% grade). It explicitly calls out these contradictions in the final executive summary.
 
 ```text
-                            [ User Triggers Site Evaluation ]
+                            [ Site Captured via Extension ]
                                             │
                                             ▼
                      ┌──────────────────────────────────────────────┐
-                     │    Data Aggregation & Normalization Phase    │
+                     │    Geospatial Data Aggregation Phase         │
                      │ (Mireye GIS: Elevation, Flood, Power, Water) │
                      └──────────────────────┬───────────────────────┘
                                             │
@@ -66,9 +49,6 @@ When you evaluate a site, the backend doesn't just run one massive prompt. Inste
          ▼              ▼ ▼              ▼ ▼ ▼                ▼ ▼              ▼
 ┌────────────────┐ ┌───────────────┐ ┌───────────────┐ ┌───────────────┐ ┌───────────────┐
 │ ⚡ Energy Agent │ │ 💧 Water Agent │ │🏔️ Surface Agent│ │🚛Transport Agt│ │⚠️ Risk Agent  │
-│ Analyzes power │ │ Checks public │ │ Grades terrain│ │ Measures road │ │ Flags FEMA    │
-│ lines, capacity│ │ utilities and │ │ slope & karst │ │ & rail access │ │ flood & USTs  │
-│ & drive-times. │ │ watershed vol.│ │ sinkholes.    │ │ logistics.    │ │ encumbrances. │
 └────────┬───────┘ └───────┬───────┘ └───────┬───────┘ └───────┬───────┘ └───────┬───────┘
          │                 │                 │                 │                 │
          └─────────────────┴─────────────────┼─────────────────┴─────────────────┘
@@ -77,78 +57,63 @@ When you evaluate a site, the backend doesn't just run one massive prompt. Inste
                      ┌──────────────────────────────────────────────┐
                      │   👑 Council Synthesizer & Conflict Engine   │
                      │ - Detects cross-domain contradictions        │
-                     │ - Scores overall feasibility (0-100 scale)   │
+                     │ - Flags Seller Claims vs. GIS Ground Truth   │
                      │ - Generates Executive Board-Ready Summary    │
                      └──────────────────────┬───────────────────────┘
                                             │
                                             ▼
-                                [ Final Output to React UI ]
+                                [ Executive Dashboard ]
 ```
-
-### 3. ⚖️ Government Compliance Data Scraper
-We do not rely on standard AI models for regulatory truth. Instead, our compliance engine directly scrapes publicly available online government and municipal data sources. It pulls active building permits, local zoning codes, and environmental records from city databases and EPA public registries so that compliance audits are grounded in real, documented civic data.
-
-### 4. 🎯 Rule-Based Radius Recommendations
-- Scans a 2km geodesic radius (Haversine distance) around your target site to find comparables.
-- Ranks recommendations on a strict mathematical scale: Proximity (50 points) + Asset Type Match (30 points) + Price Similarity (20 points).
 
 ---
 
-## 🚀 Installation & Build Guide
+## 🏛️ Government Compliance Scraper
 
-### Prerequisites
-- **Node.js** (v18+)
-- **Python** (3.10+)
-- **Google Chrome**
+To ground our risk assessments in reality, the system bypasses generalized AI knowledge and actively scrapes publicly available government data. 
 
-### 1. Backend Setup (FastAPI)
+When a site is evaluated, the Compliance Scraper reaches out to localized municipal databases, county zoning portals, and EPA public registries. It pulls active building permits, fire code violations, and current zoning ordinances directly from the source, ensuring the due diligence report reflects the exact, real-time legal status of the property.
 
+---
+
+## 🎯 Rule-Based Radius Matching
+
+The platform does not use simple keyword matching to find alternatives. It utilizes a strict mathematical **Radius Engine**. 
+
+When triggered, the engine executes a Haversine formula to draw a geodesic 2km boundary around the site. It then grades every neighboring property on a strict 100-point algorithm:
+- **Proximity (50 Points):** Absolute geodesic distance from the target site.
+- **Asset Type (30 Points):** Strict category alignment (e.g., Industrial vs. Retail).
+- **Financial Variance (20 Points):** Price-per-square-foot deviation from the baseline.
+
+---
+
+## 💬 Continuous Context & Agent Memory
+
+The agents are not static; they adapt to user directives. Through the embedded chat interface, users can provide specific development goals (e.g., *"I am building a 50MW data center, water access is critical"*).
+
+This input doesn't just trigger a chatbot response—it is permanently written to the site's atomic memory state. The next time the 5-Agent Council evaluates the property, the agents read this memory state and completely alter their scoring criteria to aggressively penalize the site if it lacks heavy water utilities or sufficient power grid access.
+
+---
+
+## ⚙️ Quick Local Setup
+
+*For development and testing purposes.*
+
+**1. Boot the Backend (Python / FastAPI)**
 ```bash
 cd backend
 python -m venv venv
-
-# Activate the virtual environment
-# Windows:
-venv\Scripts\activate
-# Mac/Linux:
-source venv/bin/activate
-
+source venv/bin/activate  # (or venv\Scripts\activate on Windows)
 pip install -r requirements.txt
-```
-
-Create a `.env` file inside the `backend/` directory:
-```env
-OPENAI_API_KEY=your_openai_api_key_here
-MIREYE_BASE_URL=https://api.mireye.com
-```
-
-**Run the Backend:**
-```bash
 python -m uvicorn main:app --reload --port 8000
 ```
+*(Requires `OPENAI_API_KEY` and `MIREYE_BASE_URL` in `backend/.env`)*
 
-### 2. Frontend Setup (React)
-
+**2. Boot the Dashboard (React / Vite)**
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-### 3. Chrome Extension Setup
-1. Open Chrome and navigate to `chrome://extensions/`.
-2. Toggle **"Developer mode"** ON (top right corner).
-3. Click **"Load unpacked"** and select the `extension/` folder from this repository.
-
----
-
-## 🗺️ How to Use the System
-
-1. **Capture:** Browse Crexi or LoopNet. Open a property listing and click the Mireye extension icon to add it to your cart.
-2. **Pipeline:** Open the Frontend (`http://localhost:5173`) to view your Property Pipeline.
-3. **Audit:** Click into a property and press **Evaluate Site**. The 5-Agent Council will run a deep geospatial analysis.
-4. **Chat & Refine:** Open the Site Intelligence Chat. Tell the system your exact requirements (e.g., *"I need this site for a data center"*). The requirements are saved to memory and factored into the agents' logic.
-5. **Expand:** Check the **Recommendations** tab to view rule-based comparables within a 2km radius. 
-
----
-*Developed by the Mireye Earth Team.*
+**3. Load the Capture Tool**
+Go to `chrome://extensions/` in Chrome, turn on Developer Mode, and click "Load unpacked" to load the `extension/` folder.
