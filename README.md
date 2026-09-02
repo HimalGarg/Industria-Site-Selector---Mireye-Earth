@@ -1,154 +1,250 @@
-# 🌐 Site Ranker: Obsidian Intelligence System
+# 🏢 Industria Site Selector — Mireye Earth & 5-Agent Council
 
-> **Advanced AI-driven commercial real estate (CRE) site selection, multi-agent evaluation, and automated regulatory due diligence.**
-
-The **Site Ranker** is an end-to-end intelligence platform designed to automate the arduous process of industrial and commercial site selection. It bridges the gap between raw web listings (Crexi, LoopNet) and deep geospatial/regulatory analysis by combining an intelligent browser extension, a Python-based Multi-Agent architecture, and a modern React frontend.
+> **Next-Generation Commercial Real Estate (CRE) Site Selection & Intelligence Platform**  
+> Powered by Chrome Extension Auto-Capture, 58 Physical GIS Datasets via Mireye Earth, a 5-Agent Autonomous Evaluation Council, Automated Regulatory Compliance, and a Dark-Mode React Executive Dashboard.
 
 ---
 
-## 🏗️ System Architecture
+## 🌟 Key Features & Capabilities
 
-The platform operates across three distinct layers, seamlessly piping data from the open web into our multi-agent evaluation engine, and finally displaying it on a sleek frontend.
+- ⚡ **1-Click Property Capture (`extension/`)**: Chrome Manifest V3 extension featuring auto-scraping adapters for **Crexi** and **LoopNet**, extracting property metrics, financial disclosures, and seller facts straight into your site pipeline.
+- 🏛️ **5-Agent Autonomous Evaluation Council (`backend/evaluate/`)**:
+  - **⚡ Energy & Power Infrastructure Agent**: Grid capacity, high-voltage transmission lines, natural gas pipelines, and drive-time power proximity.
+  - **💧 Water & Watershed Agent**: Public water service areas, PWSID, wastewater plant capacity, wetlands counts, and watershed dynamics.
+  - **🏔️ Surface & Environment Agent**: Terrain slope, soil drainage, elevation, bedrock depth, tree canopy %, and karst sinkhole risks.
+  - **🚛 Transportation & Access Agent**: Major road distance, freight rail access, airport drive-time, and seaport proximity.
+  - **⚠️ Risk & Encumbrance Agent**: FEMA flood zones, underground storage tank (UST) open leaks within 1km, orphaned wells, critical habitats, and conservation easements.
+- ⚖️ **Council Synthesizer & Contradiction Engine**:
+  - Computes weighted overall site feasibility scores (`0–100`).
+  - Detects cross-agent domain tensions (e.g. High Energy 85 vs. Low Risk 20).
+  - Automatically flags seller listing disclosures that contradict physical GIS ground truth (e.g., claimed "flat, fully serviced site" vs. non-serviced water area or steep terrain).
+- 📜 **Automated Regulatory & Compliance Agent (`backend/compliance/`)**:
+  - Interrogates municipal Open Data portals for building permits, certificates of occupancy, fire codes, and zoning violations.
+  - Deploys an **LLM Regulatory Fallback Agent** to synthesize jurisdictional zoning baselines if municipal databases are offline.
+- 🎯 **Rule-Based Radius Recommendations (`backend/radius-search`)**:
+  - Scans a 2km geodesic radius (Haversine) around the target site for comparables.
+  - Automatically ranks alternatives based on strict proximity, asset type match, and financial similarity metrics.
+- 📊 **Multi-Site Side-by-Side Comparison (`POST /compare-sites`)**: Matrix comparison of 2–4 candidate properties with automated trade-off synthesis for investment committees.
+- 💬 **Context-Grounded Site Chat & Memory Notes (`backend/chat/`)**: Grounded conversational AI assistant querying council evaluation memos, citations, and atomic listing memory notes.
+- 💎 **Obsidian Intelligence Dashboard (`frontend/`)**: Modern, high-performance React 18 + Vite + TailwindCSS executive UI featuring dark glassmorphism styling, Bento-grid pipeline layout, and slide-over audit drawers.
+
+---
+
+## 🏗️ System Architecture & Multi-Agent Flow
 
 ```text
-  [ Chrome Extension ] ──────────────────────────────────────────┐
-  (Captures Crexi/LoopNet properties)                            │
-                                                                 ▼
-                                                        [ FastAPI Backend ] 
-                                                 (Agent & Data Central Orchestrator)
-                                                                 │
-       ┌───────────────────────┬─────────────────────────────────┼─────────────────────────────────┬───────────────────────┐
-       ▼                       ▼                                 ▼                                 ▼                       ▼
- [ Mireye API ]          [ OpenAI API ]                 [ EPA / Municipal ]                 [ Local SQLite ]        [ React Frontend ]
- (Geo-Spatial Data)   (Multi-Agent Logic Base)     (Open Data Compliance Engine)      (Radius Rules & Chat Memory)    (Obsidian UI)
+                                 ┌─────────────────────────────────────────┐
+                                 │     Commercial Listing / Cart Item      │
+                                 │  (Scraped via Crexi / LoopNet Extension)│
+                                 └────────────────────┬────────────────────┘
+                                                      │
+                                                      ▼
+                                 ┌─────────────────────────────────────────┐
+                                 │          FastAPI Backend Server         │
+                                 │        SQLite Database (`site_ranker`)  │
+                                 └────────────────────┬────────────────────┘
+                                                      │
+                                                      ▼
+                                 ┌─────────────────────────────────────────┐
+                                 │  Address Geocoder & Mireye Cache Layer  │
+                                 │ (Normalize Address & Identity Data)     │
+                                 └────────────────────┬────────────────────┘
+                                                      │
+                       ┌──────────────────────────────┼──────────────────────────────┐
+                       │                              │                              │
+                       ▼                              ▼                              ▼
+             ┌───────────────────┐          ┌───────────────────┐          ┌───────────────────┐
+             │   Mireye Fetcher  │          │   Proximity API   │          │ EPA & Open Data   │
+             │(58 GIS Datasets)  │          │(Drive-Time Routing│          │ (Compliance APIs) │
+             └─────────┬─────────┘          └─────────┬─────────┘          └─────────┬─────────┘
+                       │                              │                              │
+                       └──────────────────────────────┼──────────────────────────────┘
+                                                      │
+                                                      ▼
+                       ┌─────────────────────────────────────────────────────────────┐
+                       │           Concurrent Agent Evaluation Pipeline              │
+                       │                   `asyncio.gather()`                        │
+                       └──────┬─────────────┬─────────────┬─────────────┬────────────┘
+                              │             │             │             │
+             ┌────────────────┴─┐  ┌────────┴─────────┐  ┌┴─────────────┴┐  ┌─────────┴───────┐
+             ▼                  ▼  ▼                  ▼  ▼               ▼  ▼                 ▼
+     ┌───────────────┐  ┌───────────────┐  ┌───────────────┐  ┌───────────────┐  ┌───────────────┐
+     │ Energy Agent  │  │  Water Agent  │  │ Surface Agent │  │Transport Agent│  │  Risk Agent   │
+     │(Power Grid &  │  │(Utility & H2O │  │(Terrain, Slope│  │(Road, Rail,   │  │(Flood, Contam,│
+     │ Natural Gas)  │  │  Capacity)    │  │ Soil & Karst) │  │ Airport, Port)│  │ Encumbrance)  │
+     └───────┬───────┘  └───────┬───────┘  └───────┬───────┘  └───────┬───────┘  └───────┬───────┘
+             │                  │                  │                  │                  │
+             └──────────────────┼──────────────────┼──────────────────┼──────────────────┘
+                                │                  │                  │
+                                └──────────────────┼──────────────────┘
+                                                   │
+                                                   ▼
+                                ┌────────────────────────────────────┐
+                                │        Council Synthesizer         │
+                                │(Weighted Scoring & Discrepancies)  │
+                                └──────────────────┬─────────────────┘
+                                                   │
+                                                   ▼
+                                ┌────────────────────────────────────┐
+                                │   SQLite Storage (`evaluations`)   │
+                                │   & Front-End Dashboard Render     │
+                                └────────────────────────────────────┘
 ```
 
 ---
 
-## 🧠 Core Capabilities & Multi-Agent Focus
+## 📁 Repository Directory Structure
 
-### 1. 🏛️ The 5-Agent Evaluation Council
-Rather than relying on a single monolithic AI prompt, the system deploys a concurrent council of specialized agents to scrutinize a site's viability using **Mireye GIS Data**. Each agent is highly hyper-focused on its specific discipline:
-
-- **⚡ Energy Agent:** Evaluates grid proximity and power capacity. Specifically looks for fatal flaws regarding power-heavy industrial applications.
-- **💧 Water Agent:** Analyzes water source distance and drainage capacity, ensuring proper industrial plumbing feasibility.
-- **🏔️ Surface Agent:** Assesses elevation, slope, and topographic constraints.
-- **🚛 Transport Agent:** Audits distance to highways, rail networks, and ports to ensure robust logistical supply chains.
-- **⚠️ Risk Agent:** Flags fatal flaws (flood zones, extreme weather, geological risks) that could jeopardize an investment.
-- **👑 The Synthesizer:** A master agent reviews the 5 independent reports. It resolves cross-agent tensions (e.g., "Great power access, but high flood risk"), cross-references user chat requirements, and generates a board-ready Executive Summary.
-
-### 2. ⚙️ Agent Operational Workflow
-
-When a user clicks "Evaluate Site", the system orchestrates the following flow:
-
-```text
-                                  [ User Requests Site Evaluation ]
-                                                  │
-                                                  ▼
-                                      [ Data Aggregation Phase ]
-                         (Fetches Coordinates, Elevation, Flood, & Power grids)
-                                                  │
-                                                  ▼
-    ┌───────────────────────────────────────────────────────────────────────────────────────────┐
-    │                               THE 5-AGENT EVALUATION COUNCIL                              │
-    │                                                                                           │
-    │  [⚡ Energy Agent]     -> Evaluates grid proximity, power capacity, and substation limits │
-    │  [💧 Water Agent]      -> Analyzes water source distance and drainage capacity            │
-    │  [🏔️ Surface Agent]    -> Assesses elevation, slope, and topographic constraints          │
-    │  [🚛 Transport Agent]  -> Audits distance to highways, rail networks, and ports           │
-    │  [⚠️ Risk Agent]       -> Flags fatal flaws (flood zones, extreme weather risks)          │
-    └─────────────────────────────────────────────┬─────────────────────────────────────────────┘
-                                                  │
-                                                  ▼
-                                        [ Synthesizer Agent ]
-                  (Master agent that reviews the 5 independent reports, resolves cross-agent 
-                   tensions, and generates a cohesive, board-ready Executive Summary)
-                                                  │
-                                                  ▼
-                                      [ Final UI Presentation ]
-                  (Displays Tabbed Audit Results & Executive Summary to the User Dashboard)
 ```
-
-### 3. 🕵️ Intelligent Web Capture (Chrome Extension)
-- **Seamless Ingestion:** Instantly capture properties directly from Crexi or LoopNet listings.
-- **Auto-Extraction:** Bypasses SPA (Single Page Application) routing to extract true listing IDs, prices, building sizes, and coordinates.
-- **LLM Address Normalization:** Automatically batches and converts messy, slugified URLs into pristine physical addresses for hyper-accurate geocoding by the multi-agent system.
-
-### 4. ⚖️ Automated Compliance & Regulatory Agent
-- Interrogates municipal Open Data portals for building permits, certificates of occupancy, fire codes, and zoning violations.
-- **AI Regulatory Fallback:** If a municipality lacks open data, the system automatically calls upon a dedicated LLM Regulatory Agent to synthesize a highly accurate zoning and compliance baseline for that specific jurisdiction.
-
-### 5. 🎯 Rule-Based Radius Recommendations
-- Scans a 2km geodesic radius around your target site to find comparables.
-- Ranks recommendations on a strict mathematical scale: **Proximity** (50 points) + **Asset Type Match** (30 points) + **Price Similarity** (20 points).
-- Strict pipeline isolation ensures recommendations never clutter your primary property pipeline.
+.
+├── backend/                         # FastAPI Python Application Server
+│   ├── chat/                        # Conversational AI & Memory Note Router
+│   ├── compliance/                  # Local Government Regulatory Open Data APIs & LLM Fallback
+│   ├── evaluate/                    # 5-Agent Council Evaluation Engine
+│   │   ├── agents.py                # Concurrent domain agents (Energy, Water, Surface, Transport, Risk)
+│   │   ├── compare_synthesizer.py   # Multi-site trade-off synthesis LLM prompt
+│   │   ├── mireye_fetcher.py        # Mireye Earth client & additive SQLite cache
+│   │   ├── router.py                # Async evaluation router & job runner
+│   │   └── synthesizer.py           # Council meta-synthesizer & conflict flagger
+│   ├── main.py                      # FastAPI application entrypoint & SQLite DB setup
+│   ├── requirements.txt             # Python backend dependencies
+│   └── test_*.py                    # Automated test suites (normalizer, evaluation, chat, comparison)
+│
+├── extension/                       # Manifest V3 Chrome Extension
+│   ├── background.js                # Service worker for API sync & message routing
+│   ├── content.js                   # Primary DOM injector & capture button listener
+│   └── popup.html / popup.js        # Extension toolbar popup interface
+│
+└── frontend/                        # React 18 + Vite Web Application
+    ├── src/
+    │   ├── api.ts                   # Backend REST API client methods
+    │   ├── App.tsx                  # Pipeline dashboard & routing structure
+    │   ├── components/              # Reusable UI (RadiusRecommendations, RequirementModal)
+    │   └── pages/                   # Application views (SiteDetailPage, ComparePage, RecommendationsPage)
+    ├── tailwind.config.js           # Obsidian Intelligence theme color tokens
+    └── vite.config.ts               # Vite bundler configuration
+```
 
 ---
 
-## 🚀 Installation & Build Guide
+## 🔑 Environment Configuration (`backend/.env`)
 
-### Prerequisites
-- **Node.js** (v18+)
-- **Python** (3.10+)
-- **Google Chrome**
+Create a `.env` file inside the `backend/` directory before running the server:
 
-### 1. Backend Setup (FastAPI)
-The backend handles the multi-agent logic, SQLite database (`site_ranker.db`), and GIS routing.
-
-```bash
-cd backend
-python -m venv venv
-
-# Activate the virtual environment
-# Windows:
-venv\Scripts\activate
-# Mac/Linux:
-source venv/bin/activate
-
-pip install -r requirements.txt
-```
-
-**Environment Setup:**
-Create a `.env` file inside the `backend/` directory:
 ```env
-OPENAI_API_KEY=your_openai_api_key_here
+# ---------------------------------------------------------------------------
+# OpenAI API Key (Required for 5-Agent Council, Chat, & Synthesis)
+# ---------------------------------------------------------------------------
+OPENAI_API_KEY=sk-proj-...your_openai_key_here
+OPENAI_MODEL=gpt-4o
+OPENAI_MODEL_LIGHT=gpt-4o-mini
+
+# ---------------------------------------------------------------------------
+# Mireye Earth API Key (Required for Spatial/GIS Datasets)
+# ---------------------------------------------------------------------------
+MIREYE_API_KEY=eyJhbGciOi...your_mireye_key_here
 MIREYE_BASE_URL=https://api.mireye.com
 ```
 
-**Run the Backend Engine:**
+---
+
+## 🚀 Quick Start & Setup Guide
+
+### 1. Launch FastAPI Backend Server
+
 ```bash
+# Navigate to the backend directory
+cd backend
+
+# Create & activate Python virtual environment
+python -m venv venv
+
+# On Windows PowerShell:
+.\venv\Scripts\activate
+# On macOS / Linux:
+# source venv/bin/activate
+
+# Install required dependencies
+pip install -r requirements.txt
+
+# Start the development server
 python -m uvicorn main:app --reload --port 8000
 ```
-*(The API will be available at `http://localhost:8000`)*
 
-### 2. Frontend Setup (React)
-The frontend drives the Obsidian UI, rendering the property matrix, compliance reports, and agent chat.
+- 🌐 **Interactive Swagger Docs**: [`http://localhost:8000/docs`](http://localhost:8000/docs)
+
+---
+
+### 2. Launch React Executive Dashboard
+
+Open a separate terminal window:
 
 ```bash
+# Navigate to the frontend directory
 cd frontend
+
+# Install Node dependencies
 npm install
+
+# Start Vite dev server
 npm run dev
 ```
-*(The dashboard will be available at `http://localhost:5173`)*
 
-### 3. Chrome Extension Setup
-The extension is required to populate your Property Pipeline.
-
-1. Open Chrome and navigate to `chrome://extensions/`.
-2. Toggle **"Developer mode"** ON (top right corner).
-3. Click **"Load unpacked"**.
-4. Select the `extension/` folder from this repository.
-5. *Note: If you ever modify the extension files, remember to click the circular "Refresh" icon on the extension card.*
+- 🖥️ **React Web Dashboard**: [`http://localhost:5173/`](http://localhost:5173/)
 
 ---
 
-## 🗺️ How to Use the System
+### 3. Install Chrome Extension
 
-1. **Capture:** Browse Crexi or LoopNet. Open a property listing and click the Mireye extension icon to add it to your cart.
-2. **Pipeline:** Open the Frontend (`http://localhost:5173`). Your captured properties will appear in the **Property Pipeline**.
-3. **Audit:** Click into a property and press **Evaluate Site**. The 5-Agent Council will run a deep geospatial analysis.
-4. **Chat & Refine:** Open the Site Intelligence Chat. Tell the system your exact requirements (e.g., *"I need this site for a data center"*). The requirements will be automatically saved to memory and factored into future audits by the agents.
-5. **Expand:** Check the **Recommendations** tab to view rule-based comparables within a 2km radius. 
+1. Open Google Chrome and navigate to `chrome://extensions/`.
+2. Enable **Developer mode** using the toggle in the top-right corner.
+3. Click **Load unpacked**.
+4. Select the `extension/` folder in this repository.
+5. Open any property listing on **Crexi** or **LoopNet** and click **"Add to Site Ranker"** to instantly push listings into your intelligence pipeline!
 
 ---
-*Developed by the Mireye Earth Team.*
+
+## 🧪 Running Automated Test Suites
+
+The backend includes automated test suites verifying all core engine layers:
+
+```bash
+cd backend
+
+# 1. LLM Schema Normalizer Unit Tests
+python -m unittest test_normalizer.py
+
+# 2. 5-Agent Council Evaluation Engine Tests
+python test_evaluation_pipeline.py -v
+
+# 3. Site Intelligence Chat & Memory Router Tests
+python test_chat_pipeline.py -v
+
+# 4. Multi-Site Side-by-Side Comparison Tests
+python test_compare_pipeline.py -v
+```
+
+---
+
+## 🔌 Core API Endpoints
+
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/cart-items` | Save/update listing captured from Chrome Extension |
+| `GET` | `/cart-items` | Retrieve captured properties in user pipeline |
+| `POST` | `/cart-items/{id}/radius-search`| Execute rule-based 2km radius search for property comparables |
+| `POST` | `/evaluate-site` | Kick off non-blocking 5-agent council evaluation audit |
+| `GET` | `/evaluate-site/{id}` | Poll evaluation audit status & retrieve full 5-agent report |
+| `GET` | `/compliance/{id}` | Execute municipal Open Data and AI Regulatory Agent due-diligence |
+| `POST` | `/chat` | Synchronous site intelligence chat turn (grounded in council findings) |
+| `GET` | `/chat` | Retrieve full chat history for a property |
+| `GET` | `/listing-memory` | Retrieve atomic key takeaway notes for a listing |
+| `POST` | `/compare-sites` | Side-by-side comparison of 2–4 sites with matrix & trade-offs synthesis |
+
+---
+
+## 🛠 Tech Stack
+
+- **Extension**: Chrome Manifest V3, Pluggable DOM Adapters, Fetch API.
+- **Backend**: Python 3.10+, FastAPI, Uvicorn, SQLite, OpenAI API (JSON Mode), Mireye Earth GIS API.
+- **Frontend**: React 18, Vite, TypeScript, TailwindCSS, Lucide / Google Symbols Icons.
