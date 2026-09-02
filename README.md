@@ -8,81 +8,80 @@ The **Site Ranker** is an end-to-end intelligence platform designed to automate 
 
 ## 🏗️ System Architecture
 
-The platform operates across three distinct layers: the **Capture Layer** (Chrome Extension), the **Intelligence Layer** (FastAPI & Agents), and the **Presentation Layer** (React Frontend).
+The platform operates across three distinct layers, seamlessly piping data from the open web into our multi-agent evaluation engine, and finally displaying it on a sleek frontend.
 
-```mermaid
-graph TD
-    subgraph Capture Layer
-        A[Chrome Extension] -->|Injects Scripts| B(Crexi / LoopNet)
-        A -->|POST /cart-items| C
-    end
-
-    subgraph Intelligence Layer
-        C[FastAPI Backend] --> D[(SQLite Database)]
-        C <-->|Geospatial Data| E[Mireye Earth API]
-        C <-->|Compliance Checks| F[EPA / Municipal Open Data]
-        C <-->|AI Reasoning & Chat| G[OpenAI Models]
-    end
-
-    subgraph Presentation Layer
-        H[React / Vite Frontend] <-->|REST API| C
-        H --> I[Property Pipeline]
-        H --> J[5-Agent Audit Hub]
-        H --> K[Radius Recommendations]
-    end
+```text
+  [ Chrome Extension ] ──────────────────────────────────────────┐
+  (Captures Crexi/LoopNet properties)                            │
+                                                                 ▼
+                                                        [ FastAPI Backend ] 
+                                                 (Agent & Data Central Orchestrator)
+                                                                 │
+       ┌───────────────────────┬─────────────────────────────────┼─────────────────────────────────┬───────────────────────┐
+       ▼                       ▼                                 ▼                                 ▼                       ▼
+ [ Mireye API ]          [ OpenAI API ]                 [ EPA / Municipal ]                 [ Local SQLite ]        [ React Frontend ]
+ (Geo-Spatial Data)   (Multi-Agent Logic Base)     (Open Data Compliance Engine)      (Radius Rules & Chat Memory)    (Obsidian UI)
 ```
 
 ---
 
-## 🧠 Core Capabilities
+## 🧠 Core Capabilities & Multi-Agent Focus
 
-### 1. 🕵️ Intelligent Web Capture (Chrome Extension)
+### 1. 🏛️ The 5-Agent Evaluation Council
+Rather than relying on a single monolithic AI prompt, the system deploys a concurrent council of specialized agents to scrutinize a site's viability using **Mireye GIS Data**. Each agent is highly hyper-focused on its specific discipline:
+
+- **⚡ Energy Agent:** Evaluates grid proximity and power capacity. Specifically looks for fatal flaws regarding power-heavy industrial applications.
+- **💧 Water Agent:** Analyzes water source distance and drainage capacity, ensuring proper industrial plumbing feasibility.
+- **🏔️ Surface Agent:** Assesses elevation, slope, and topographic constraints.
+- **🚛 Transport Agent:** Audits distance to highways, rail networks, and ports to ensure robust logistical supply chains.
+- **⚠️ Risk Agent:** Flags fatal flaws (flood zones, extreme weather, geological risks) that could jeopardize an investment.
+- **👑 The Synthesizer:** A master agent reviews the 5 independent reports. It resolves cross-agent tensions (e.g., "Great power access, but high flood risk"), cross-references user chat requirements, and generates a board-ready Executive Summary.
+
+### 2. ⚙️ Agent Operational Workflow
+
+When a user clicks "Evaluate Site", the system orchestrates the following flow:
+
+```text
+                                  [ User Requests Site Evaluation ]
+                                                  │
+                                                  ▼
+                                      [ Data Aggregation Phase ]
+                         (Fetches Coordinates, Elevation, Flood, & Power grids)
+                                                  │
+                                                  ▼
+    ┌───────────────────────────────────────────────────────────────────────────────────────────┐
+    │                               THE 5-AGENT EVALUATION COUNCIL                              │
+    │                                                                                           │
+    │  [⚡ Energy Agent]     -> Evaluates grid proximity, power capacity, and substation limits │
+    │  [💧 Water Agent]      -> Analyzes water source distance and drainage capacity            │
+    │  [🏔️ Surface Agent]    -> Assesses elevation, slope, and topographic constraints          │
+    │  [🚛 Transport Agent]  -> Audits distance to highways, rail networks, and ports           │
+    │  [⚠️ Risk Agent]       -> Flags fatal flaws (flood zones, extreme weather risks)          │
+    └─────────────────────────────────────────────┬─────────────────────────────────────────────┘
+                                                  │
+                                                  ▼
+                                        [ Synthesizer Agent ]
+                  (Master agent that reviews the 5 independent reports, resolves cross-agent 
+                   tensions, and generates a cohesive, board-ready Executive Summary)
+                                                  │
+                                                  ▼
+                                      [ Final UI Presentation ]
+                  (Displays Tabbed Audit Results & Executive Summary to the User Dashboard)
+```
+
+### 3. 🕵️ Intelligent Web Capture (Chrome Extension)
 - **Seamless Ingestion:** Instantly capture properties directly from Crexi or LoopNet listings.
 - **Auto-Extraction:** Bypasses SPA (Single Page Application) routing to extract true listing IDs, prices, building sizes, and coordinates.
-- **LLM Address Normalization:** Automatically batches and converts messy, slugified URLs into pristine physical addresses for hyper-accurate geocoding.
+- **LLM Address Normalization:** Automatically batches and converts messy, slugified URLs into pristine physical addresses for hyper-accurate geocoding by the multi-agent system.
 
-### 2. 🏛️ The 5-Agent Evaluation Council
-Rather than relying on a single AI prompt, the system deploys a concurrent council of specialized agents to scrutinize a site's viability using **Mireye GIS Data**:
-1. **⚡ Energy Agent:** Evaluates grid proximity and power capacity.
-2. **💧 Water Agent:** Analyzes water source distance and drainage capacity.
-3. **🏔️ Surface Agent:** Assesses elevation, slope, and topographic constraints.
-4. **🚛 Transport Agent:** Audits distance to highways, rail networks, and ports.
-5. **⚠️ Risk Agent:** Flags fatal flaws (flood zones, extreme weather, geological risks).
-- **The Synthesizer:** A master agent reviews the 5 independent reports, resolves tensions (e.g., "Great power access, but high flood risk"), and generates a board-ready Executive Summary.
-
-### 3. ⚖️ Automated Compliance & Regulatory Engine
+### 4. ⚖️ Automated Compliance & Regulatory Agent
 - Interrogates municipal Open Data portals for building permits, certificates of occupancy, fire codes, and zoning violations.
-- **AI Regulatory Fallback:** If a municipality lacks open data, the system automatically falls back to an LLM-driven Regulatory Agent to synthesize a highly accurate zoning and compliance baseline for that specific jurisdiction.
+- **AI Regulatory Fallback:** If a municipality lacks open data, the system automatically calls upon a dedicated LLM Regulatory Agent to synthesize a highly accurate zoning and compliance baseline for that specific jurisdiction.
 
-### 4. 🎯 Rule-Based Radius Recommendations
+### 5. 🎯 Rule-Based Radius Recommendations
 - Scans a 2km geodesic radius around your target site to find comparables.
 - Ranks recommendations on a strict mathematical scale: **Proximity** (50 points) + **Asset Type Match** (30 points) + **Price Similarity** (20 points).
 - Strict pipeline isolation ensures recommendations never clutter your primary property pipeline.
-
----
-
-## ⚙️ Evaluation Workflow
-
-```mermaid
-sequenceDiagram
-    participant User
-    participant UI as Frontend
-    participant API as FastAPI
-    participant Mireye as Mireye GIS
-    participant Council as 5-Agent Council
-    participant Synth as Synthesizer Agent
-
-    User->>UI: Click "Evaluate Site"
-    UI->>API: POST /evaluate
-    API->>Mireye: Fetch Site Coordinates & Data
-    Mireye-->>API: Elevation, Flood, Power, Transport
-    API->>Council: Dispatch to specialized Agents
-    Note over Council: Concurrently evaluate constraints
-    Council-->>API: Return 5 JSON Reports
-    API->>Synth: Synthesize conflicts & consensus
-    Synth-->>API: Final Executive Summary
-    API-->>UI: Display Tabbed Audit Results
-```
 
 ---
 
@@ -148,7 +147,7 @@ The extension is required to populate your Property Pipeline.
 1. **Capture:** Browse Crexi or LoopNet. Open a property listing and click the Mireye extension icon to add it to your cart.
 2. **Pipeline:** Open the Frontend (`http://localhost:5173`). Your captured properties will appear in the **Property Pipeline**.
 3. **Audit:** Click into a property and press **Evaluate Site**. The 5-Agent Council will run a deep geospatial analysis.
-4. **Chat & Refine:** Open the Site Intelligence Chat. Tell the system your exact requirements (e.g., *"I need this site for a data center"*). The requirements will be automatically saved to memory and factored into future audits.
+4. **Chat & Refine:** Open the Site Intelligence Chat. Tell the system your exact requirements (e.g., *"I need this site for a data center"*). The requirements will be automatically saved to memory and factored into future audits by the agents.
 5. **Expand:** Check the **Recommendations** tab to view rule-based comparables within a 2km radius. 
 
 ---
