@@ -355,3 +355,6 @@ async def run_zoning_agent(address: str, jurisdiction: str) -> Tuple[str, List[F
             return risk, findings
 
     return run_llm_compliance_fallback(address, jurisdiction, "Zoning & Land Use")
+
+async def run_occupancy_agent(address: str, jurisdiction: str) -> Tuple[str, List[Finding]]:
+    return run_llm_compliance_fallback(address, jurisdiction, "Occupancy & Certificates")

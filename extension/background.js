@@ -148,11 +148,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
                       // ── Fallback: extract from validated property links ───
                       if (properties.length === 0 && listingLinks.length > 0) {
-                        const seen = new Set();
+                        const seenIds = new Set();
                         listingLinks.forEach(a => {
                           const href = a.href;
-                          if (seen.has(href)) return;
-                          seen.add(href);
 
                           // Parse address from slug: /properties/12345-1234-main-st-chicago-il
                           const pathPart = href.split('/properties/')[1] || "";
@@ -161,10 +159,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                           // Slug must contain digits to be a real listing
                           if (!/\d/.test(slug)) return;
 
-                          // Convert slug to readable address: "1234-main-st-chicago-il" → "1234 main st chicago il"
-                          // Remove leading numeric ID prefix if present (e.g. "12345-1234-main..." → "1234-main-...")
+                          // Dedupe by numeric ID (e.g. from "12345/ohio" or "12345-main-st")
                           const slugParts = slug.split('-');
-                          // If first part is a long numeric ID (>5 digits), skip it
+                          const firstPart = slugParts[0];
+                          const numericMatch = firstPart.match(/\d+/);
+                          const propId = numericMatch ? numericMatch[0] : href;
+
+                          if (seenIds.has(propId)) return;
+                          seenIds.add(propId);
+
+                          // Convert slug to readable address: "1234-main-st-chicago-il" → "1234 main st chicago il"
+                          // Remove leading numeric ID prefix if present
                           const startIdx = (slugParts[0].length > 5 && /^\d+$/.test(slugParts[0])) ? 1 : 0;
                           const addressSlug = slugParts.slice(startIdx).join(' ');
 

@@ -152,11 +152,15 @@ export async function deleteCartItem(cartItemId: string): Promise<void> {
 // Evaluation Pipeline API Calls
 // ---------------------------------------------------------------------------
 
-export async function startEvaluation(cartItemId: string): Promise<{ evaluation_id: string; status: string }> {
+export async function startEvaluation(cartItemId: string, userRequirements?: string): Promise<{ evaluation_id: string; status: string }> {
+  const body: any = { cart_item_id: cartItemId };
+  if (userRequirements) {
+    body.user_requirements = userRequirements;
+  }
   const res = await fetch(`${API_BASE}/evaluate-site`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ cart_item_id: cartItemId }),
+    body: JSON.stringify(body),
   });
   if (!res.ok) {
     const err = await res.json();

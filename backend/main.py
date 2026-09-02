@@ -744,9 +744,18 @@ def radius_search(cart_item_id: str, payload: RadiusSearchIn):
                 
         # Parse structured data
         raw_details = prop.get("details", {})
+        
+        raw_title = prop.get("listing_title", "")
+        bad_titles = ["request info", "view details", "see listing", "contact broker", "unknown"]
+        final_title = clean_addr if (not raw_title or raw_title.lower().strip() in bad_titles) else raw_title
+        
+        # If the title is just the messy slug (like "2299353/Ohio 111 113..."), replace it with the clean address
+        if "/" in final_title and any(char.isdigit() for char in final_title.split("/")[0]):
+            final_title = clean_addr
+
         llm_struct = build_llm_structured_data(
-            address=prop.get("address", ""),
-            listing_title=prop.get("listing_title"),
+            address=clean_addr,
+            listing_title=final_title,
             source_url=prop.get("source_url"),
             image_url=prop.get("image_url"),
             details=raw_details,
@@ -767,33 +776,38 @@ def radius_search(cart_item_id: str, payload: RadiusSearchIn):
         else:
             # If we couldn't geocode it, heavily penalize it so it acts as a fallback
             score += 0
-            item_dist = "Unknown"
+            item_dist = 999
             
-        # RULE 2: Property Type (Up to 30 points)
+        # RULE 2: Same Property Type (30 points)
         if prop_type and parent_type and str(prop_type).lower() == str(parent_type).lower():
             score += 30
             
-        # RULE 3: Price (Up to 20 points)
+        # RULE 3: Price Proximity (20 points)
         if prop_price and parent_price:
-            diff = abs(prop_price - parent_price) / parent_price
-            score += max(0, 20 - (diff * 40))
-            
+            try:
+                # very rough naive diff
+                p_val = float(str(prop_price).replace("$","").replace(",",""))
+                orig_val = float(str(parent_price).replace("$","").replace(",",""))
+                diff = abs(p_val - orig_val) / orig_val
+                score += max(0, 20 - (diff * 20))
+            except Exception:
+                pass
+                
         scored_props.append({
-            "prop": prop, 
-            "score": score, 
-            "llm_struct": llm_struct,
-            "dist_km": item_dist
+            "score": score,
+            "dist_km": item_dist,
+            "prop": prop,
+            "clean_addr": clean_addr,
+            "final_title": final_title,
+            "llm_struct": llm_struct
         })
         
-    # Sort by the final rule-based score (Highest first)
+    # Sort by score descending and take top 5
     scored_props.sort(key=lambda x: x["score"], reverse=True)
+    top_5 = scored_props[:5]
     
-    # Take the top 5 Best Recommended properties
-    filtered_top = scored_props[:5]
-
-    # 4. Insert into DB
     results = []
-    for item in filtered_top:
+    for item in top_5:
         prop = item["prop"]
         # Inject distance into the LLM structured identity so the frontend can display it
         item["llm_struct"]["identity"]["distance_km"] = item.get("dist_km", "Unknown")
@@ -809,9 +823,9 @@ def radius_search(cart_item_id: str, payload: RadiusSearchIn):
                 (
                     new_id,
                     payload.session_id,
-                    prop.get("address", ""),
+                    item["clean_addr"],
                     prop.get("source_url", ""),
-                    prop.get("listing_title", ""),
+                    item["final_title"],
                     prop.get("image_url", ""),
                     json.dumps(prop.get("details", {})),
                     json.dumps(item["llm_struct"]),
@@ -824,7 +838,7 @@ def radius_search(cart_item_id: str, payload: RadiusSearchIn):
             
             results.append({
                 "cart_item_id": new_id,
-                "address": prop.get("address", ""),
+                "address": item["clean_addr"],
                 "dist_km": item.get("dist_km", "Unknown")
             })
             
